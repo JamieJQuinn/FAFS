@@ -8,7 +8,8 @@
 
 class Array;
 
-typedef std::function<real(const Array&, const int, const int, const Constants&)> kernelFn;
+typedef std::function<real(const Array&, const int, const int)> kernelFn;
+typedef std::function<void(Array&, const int, const int)> kernelFnInPlace;
 
 class Array {
   public:
@@ -19,8 +20,10 @@ class Array {
     const int idx(const int i, const int j) const;
     int size() const;
     void render() const;
-    void applyKernel(Array& out, kernelFn fn) const;
+    void applyKernel(kernelFn fn, Array& out) const;
+    void applyKernel(kernelFnInPlace fn);
     const real operator()(const int i, const int j) const;
     real& operator()(const int i, const int j);
     Array& operator=(const Array& arr);
+    void operator+=(const Array& arr);
 };

@@ -6,8 +6,8 @@
 #include <precision.hpp>
 
 void setInitialConditions(Variables& vars, const Constants& c) {
-  for (int i=0; i<c.nx/2; ++i) {
-    for (int j=0; j<c.ny; ++j) {
+  for (int i=c.nx/4; i<3*c.nx/4; ++i) {
+    for (int j=c.ny/4; j<3*c.ny/4; ++j) {
       vars.vx(i,j) = 9.0;
     }
   }
@@ -17,11 +17,11 @@ void render(const Variables& vars) {
   vars.vx.render();
 }
 
-real diffusionKernel(const Array& f, const int i, const int j, const Constants& c) {
-  return (f(i,j+1) + f(i,j-1) + f(i+1,j) + f(i-1,j) - 4*f(i,j))/(c.dx*c.dy);
+real calcDiffusion(const Array& f, const int i, const int j, const real dx, const real dy) {
+  return (f(i,j+1) + f(i,j-1) + f(i+1,j) + f(i-1,j) - 4*f(i,j))/(dx*dy);
 }
 
-real identityKernel(const Array& f, const int i, const int j, const Constants& c) {
+real identityKernel(const Array& f, const int i, const int j) {
   return f(i,j);
 }
 
@@ -33,18 +33,25 @@ int main() {
   setInitialConditions(vars, c);
 
   Array out(c);
-  out.render();
-  vars.vx.applyKernel(out, diffusionKernel);
-
-  vars.vx.render();
-  out.render();
 
   real t=0;
-  real total_time = 1.0;
-  real dt = 0.5;
+  real total_time = 0.002;
+  real dt = 0.001;
 
+  auto diffusionKernel = [&](const Array& f, const int i, const int j) {
+    return calcDiffusion(f, i, j, c.dx, c.dy);
+  };
+
+  auto updateKernel = [&](Array& f, const int i, const int j) {
+    f(i,j) += out(i,j)*dt;
+  };
+
+  vars.vx.render();
   while (t < total_time) {
-    std::cout << "Still running" << std::endl;
+    vars.vx.applyKernel(diffusionKernel, out);
+    vars.vx.applyKernel(updateKernel);
+
     t += dt;
   }
+  vars.vx.render();
 }

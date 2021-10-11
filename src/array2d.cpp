@@ -19,16 +19,24 @@ int Array::size() const {
 void Array::render() const {
   for (int j=0; j<c.ny; ++j) {
     for (int i=0; i<c.nx; ++i) {
-      std::cout << int((*this)(i,j));
+      std::cout << int((*this)(i,j)) << " ";
     }
     std::cout << std::endl;
   }
 }
 
-void Array::applyKernel(Array& out, kernelFn fn) const {
+void Array::applyKernel(kernelFn fn, Array& out) const {
   for (int i=0; i<c.nx; ++i) {
     for (int j=0; j<c.ny; ++j) {
-      out(i,j) = fn((*this), i, j, c);
+      out(i,j) = fn((*this), i, j);
+    }
+  }
+}
+
+void Array::applyKernel(kernelFnInPlace fn) {
+  for (int i=0; i<c.nx; ++i) {
+    for (int j=0; j<c.ny; ++j) {
+      fn((*this), i, j);
     }
   }
 }
@@ -52,4 +60,12 @@ Array& Array::operator=(const Array& arr) {
     }
   }
   return *this;
+}
+
+void Array::operator+=(const Array& arr) {
+  for (int i=0; i<c.nx; ++i) {
+    for (int j=0; j<c.ny; ++j) {
+      (*this)(i,j) += arr(i,j);
+    }
+  }
 }
