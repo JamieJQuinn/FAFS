@@ -21,6 +21,10 @@ real diffusionKernel(const Array& f, const int i, const int j, const Constants& 
   return (f(i,j+1) + f(i,j-1) + f(i+1,j) + f(i-1,j) - 4*f(i,j))/(c.dx*c.dy);
 }
 
+real identityKernel(const Array& f, const int i, const int j, const Constants& c) {
+  return f(i,j);
+}
+
 int main() {
   const Constants c;
 
