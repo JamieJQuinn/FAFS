@@ -1,6 +1,7 @@
 #include <variables.hpp>
+#include <constants.hpp>
 #include <array2d.hpp>
 
-Variables::Variables(const int nx, const int ny, const int ng):
-  vx{makeArray(nx, ny, ng)}
+Variables::Variables(const Constants& c):
+  vx(c)
 {}

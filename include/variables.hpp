@@ -1,10 +1,12 @@
 #pragma once
 
 #include <memory>
-#include "precision.hpp"
+
+#include <precision.hpp>
+#include <array2d.hpp>
 
 class Variables {
   public:
-    std::unique_ptr<real[]> vx;
-    Variables(const int nx, const int ny, const int ng);
+    Array vx;
+    Variables(const Constants& c);
 };

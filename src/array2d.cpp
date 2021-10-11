@@ -1,9 +1,55 @@
-#include "array2d.hpp"
+#include <iostream>
 
-int calcTotalArraySize(const int nx, const int ny, const int ng) {
-  return (nx+2*ng)*(ny+2*ng);
+#include <array2d.hpp>
+#include <constants.hpp>
+
+Array::Array(const Constants& c_in, real initial_val):
+  c{c_in}
+{
+  data = std::make_unique<real[]>(size());
+  for (int i=0; i<size(); ++i) {
+    data[i] = initial_val;
+  }
 }
 
-array makeArray(const int nx, const int ny, const int ng) {
-  return std::make_unique<real[]>(calcTotalArraySize(nx, ny, ng));
+int Array::size() const {
+  return (c.nx+2*c.ng)*(c.ny+2*c.ng);
+}
+
+void Array::render() const {
+  for (int j=0; j<c.ny; ++j) {
+    for (int i=0; i<c.nx; ++i) {
+      std::cout << int((*this)(i,j));
+    }
+    std::cout << std::endl;
+  }
+}
+
+void Array::applyKernel(Array& out, kernelFn fn) const {
+  for (int i=0; i<c.nx; ++i) {
+    for (int j=0; j<c.ny; ++j) {
+      out(i,j) = fn((*this), i, j, c);
+    }
+  }
+}
+
+const int Array::idx(const int i, const int j) const {
+  return (i+c.ng)*(c.ny+2*c.ng) + (j+c.ng);
+}
+
+const real Array::operator()(const int i, const int j) const {
+  return data[idx(i,j)];
+}
+
+real& Array::operator()(const int i, const int j) {
+  return data[idx(i,j)];
+}
+
+Array& Array::operator=(const Array& arr) {
+  for (int i=0; i<c.nx; ++i) {
+    for (int j=0; j<c.ny; ++j) {
+      (*this)(i,j) = arr(i,j);
+    }
+  }
+  return *this;
 }
