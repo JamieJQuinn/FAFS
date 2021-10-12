@@ -24,7 +24,7 @@ int Array::size() const {
 }
 
 void Array::render() const {
-  for (int j=0; j<c.ny; ++j) {
+  for (int j=c.ny-1; j>=0; --j) {
     for (int i=0; i<c.nx; ++i) {
       std::cout << int((*this)(i,j));
     }

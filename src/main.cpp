@@ -7,10 +7,23 @@
 #include <hdffile.hpp>
 
 void setInitialConditions(Variables& vars, const Constants& c) {
-  for (int i=c.nx/4; i<3*c.nx/4; ++i) {
-    for (int j=c.ny/4; j<3*c.ny/4; ++j) {
+  //for (int i=c.nx/4; i<3*c.nx/4; ++i) {
+  for (int i=0; i<c.nx/2; ++i) {
+    //for (int j=c.ny/4; j<3*c.ny/4; ++j) {
+    for (int j=0; j<c.ny/2; ++j) {
       vars.vx(i,j) = 9.0;
     }
+  }
+}
+
+void applyBoundaryConditions(Variables& vars, const Constants& c) {
+  for (int i=0; i<c.nx; ++i) {
+    vars.vx(i, -1) = -vars.vx(i, 0);
+    vars.vx(i, c.ny) = -vars.vx(i, c.ny-1);
+  }
+  for(int j=0; j<c.ny; ++j) {
+    vars.vx(-1, j) = -vars.vx(0, j);
+    vars.vx(c.nx, j) = -vars.vx(c.nx-1, j);
   }
 }
 
@@ -36,7 +49,7 @@ int main() {
   Array out(c, "temp");
 
   real t=0;
-  real total_time = 0.002;
+  real total_time = 0.01;
   real dt = 0.001;
 
   auto diffusionKernel = [&](const Array& f, const int i, const int j) {
@@ -51,13 +64,15 @@ int main() {
   vars.vx.saveTo(icFile.file);
   icFile.close();
 
-  vars.vx.render();
   while (t < total_time) {
     vars.vx.applyKernel(diffusionKernel, out);
     vars.vx.applyKernel(updateKernel);
+    applyBoundaryConditions(vars, c);
 
     t += dt;
   }
+
+  vars.vx.render();
 
   HDFFile laterFile("000001.hdf5");
   vars.vx.saveTo(laterFile.file);

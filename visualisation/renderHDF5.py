@@ -13,8 +13,8 @@ def main():
     fname = args.filename
 
     with h5py.File(fname, "r") as hf:
-        data = hf[args.variable][:, :]
-        plt.imshow(data)
+        data = hf[args.variable][:, :].T
+        plt.imshow(data, origin='lower')
         plt.show()
 
 
