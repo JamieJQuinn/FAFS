@@ -4,5 +4,6 @@
 
 Variables::Variables(const Constants& c):
   vx(c, "vx"),
-  vy(c, "vy")
+  vy(c, "vy"),
+  p(c, "pressure")
 {}

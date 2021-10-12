@@ -35,10 +35,6 @@ void render(const Variables& vars) {
   vars.vx.render();
 }
 
-real calcDiffusion(const Array& f, const int i, const int j, const real nu, const real dx, const real dy) {
-  return nu*(f(i,j+1) + f(i,j-1) + f(i+1,j) + f(i-1,j) - 4*f(i,j))/(dx*dy);
-}
-
 int clamp(const int i, const int upper, const int lower) {
   return std::max(std::min(i, upper), lower);
 }
@@ -56,6 +52,10 @@ real calcAdvection(const Array& q, const int i, const int j, const real dx, cons
   return (q(ip, jp) + q(ip, jm) + q(im, jp) + q(im, jm))/4;
 }
 
+real calcJacobiStep(const Array& q, const int i, const int j, const real alpha, const real beta, const Array& b) {
+  return (alpha*b(i,j) + q(i,j+1) + q(i,j-1) + q(i+1,j) + q(i-1,j))/beta;
+}
+
 real identityKernel(const Array& f, const int i, const int j) {
   return f(i,j);
 }
@@ -67,26 +67,39 @@ int main() {
 
   setInitialConditions(vars, c);
 
-  Array out(c, "temp");
+  Array temp1(c, "temp1");
+  Array temp2(c, "temp2");
 
   real t=0;
-  real total_time = 0.003;
+  real total_time = 0.01;
   real dt = 0.001;
 
-  auto diffusionKernel = [&](const Array& f, const int i, const int j) {
-    return calcDiffusion(f, i, j, c.nu, c.dx, c.dy);
+  auto vxDiffusionJacobiKernel = [&](const Array& f, const int i, const int j) {
+    return calcJacobiStep(f, i, j, (c.dx*c.dy)/(c.nu*dt), 4+(c.dx*c.dy)/(c.nu*dt), vars.vx);
+  };
+
+  auto vyDiffusionJacobiKernel = [&](const Array& f, const int i, const int j) {
+    return calcJacobiStep(f, i, j, (c.dx*c.dy)/(c.nu*dt), 4+(c.dx*c.dy)/(c.nu*dt), vars.vy);
+  };
+
+  auto projectionJacobiKernel = [&](const Array& f, const int i, const int j) {
+    return calcJacobiStep(f, i, j, (c.dx*c.dy)/(c.nu*dt), 4+(c.dx*c.dy)/(c.nu*dt), vars.vy);
+  };
+
+  auto divergenceKernal = [&](const Array& f, const int i, const int j) {
+    return calcDivergence(f, i, j, c.dx, c.dy, vars.vx, vars.vy);
   };
 
   auto advectionKernel = [&](const Array& q, const int i, const int j) {
     return calcAdvection(q, i, j, c.dx, c.dy, c.nx, c.ny, c.ng, vars.vx, vars.vy);
   };
 
-  auto updateKernel = [&](Array& f, const int i, const int j) {
-    f(i,j) += out(i,j)*dt;
+  auto updateKernel = [&](Array& f, const Array& in, const int i, const int j) {
+    f(i,j) += in(i,j)*dt;
   };
 
-  auto assignKernel = [&](Array& f, const int i, const int j) {
-    f(i,j) = out(i,j);
+  auto assignKernel = [&](Array& f, const Array& in, const int i, const int j) {
+    f(i,j) = in(i,j);
   };
 
   HDFFile icFile("000000.hdf5");
@@ -97,14 +110,20 @@ int main() {
   while (t < total_time) {
     applyBoundaryConditions(vars, c);
 
-    vars.vx.applyKernel(advectionKernel, out);
-    vars.vx.applyKernel(assignKernel);
-    //vars.vy.applyKernel(advectionKernel, out);
-    //vars.vy.applyKernel(assignKernel);
-    vars.vx.applyKernel(diffusionKernel, out);
-    vars.vx.applyKernel(updateKernel);
-    //vars.vy.applyKernel(diffusionKernel, out);
-    //vars.vy.applyKernel(updateKernel);
+    //vars.vx.applyKernel(advectionKernel, temp1);
+    //vars.vx.applyKernel(assignKernel, temp1);
+    //vars.vy.applyKernel(advectionKernel, temp1);
+    //vars.vy.applyKernel(assignKernel, temp1);
+    temp1.applyKernel(assignKernel, vars.vx);
+    for(int i=0; i<20; ++i) {
+      temp1.applyKernel(vxDiffusionJacobiKernel, temp2);
+      temp1.swap(temp2);
+    }
+    vars.vx.applyKernel(assignKernel, temp2);
+    //vars.vx.applyKernel(diffusionKernel, temp1);
+    //vars.vx.applyKernel(updateKernel, temp1);
+    //vars.vy.applyKernel(diffusionKernel, temp1);
+    //vars.vy.applyKernel(updateKernel, temp1);
 
     t += dt;
   }
@@ -115,6 +134,5 @@ int main() {
   HDFFile laterFile("000001.hdf5");
   vars.vx.saveTo(laterFile.file);
   vars.vy.saveTo(laterFile.file);
-  out.saveTo(laterFile.file);
   icFile.close();
 }

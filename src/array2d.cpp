@@ -52,10 +52,10 @@ void Array::applyKernel(kernelFn fn, Array& out) const {
   }
 }
 
-void Array::applyKernel(kernelFnInPlace fn) {
+void Array::applyKernel(kernelFnInPlace fn, const Array& in) {
   for (int i=0; i<c.nx; ++i) {
     for (int j=0; j<c.ny; ++j) {
-      fn((*this), i, j);
+      fn((*this), in, i, j);
     }
   }
 }
@@ -106,4 +106,9 @@ void Array::saveTo(H5::H5File& file) const {
 void Array::setName(const std::string& name) {
   this->name = name;
   hasName = true;
+}
+
+void Array::swap(Array& arr) {
+  std::swap(this->data, arr.data);
+  std::swap(this->name, arr.name);
 }
