@@ -1,7 +1,9 @@
 #pragma once
 
+#include <string>
 #include <memory>
 #include <functional>
+#include <H5Cpp.h>
 
 #include <precision.hpp>
 #include <constants.hpp>
@@ -13,10 +15,8 @@ typedef std::function<void(Array&, const int, const int)> kernelFnInPlace;
 
 class Array {
   public:
-    std::unique_ptr<real[]> data;
-    const Constants& c;
-
-    Array(const Constants& c_in, real initial_val = 0.0f);
+    Array(const Constants& c_in, const std::string& name, real initial_val = 0.0f);
+    ~Array();
     const int idx(const int i, const int j) const;
     int size() const;
     void render() const;
@@ -26,4 +26,9 @@ class Array {
     real& operator()(const int i, const int j);
     Array& operator=(const Array& arr);
     void operator+=(const Array& arr);
+    void saveTo(H5::H5File& file) const;
+  private:
+    real* data;
+    const Constants& c;
+    std::string name;
 };

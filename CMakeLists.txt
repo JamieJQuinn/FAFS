@@ -5,3 +5,10 @@ set(CMAKE_BUILD_TYPE Release)
 file(GLOB SOURCES "src/*.cpp")
 add_executable (exe ${SOURCES})
 target_include_directories (exe PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+include(${CMAKE_BINARY_DIR}/conan_paths.cmake)
+
+find_package(HDF5)
+if(TARGET HDF5::HDF5)
+   target_link_libraries(exe HDF5::HDF5)
+endif()

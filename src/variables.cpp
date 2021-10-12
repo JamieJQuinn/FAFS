@@ -3,5 +3,5 @@
 #include <array2d.hpp>
 
 Variables::Variables(const Constants& c):
-  vx(c)
+  vx(c, "vx")
 {}

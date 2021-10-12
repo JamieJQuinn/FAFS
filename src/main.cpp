@@ -4,6 +4,7 @@
 #include <array2d.hpp>
 #include <variables.hpp>
 #include <precision.hpp>
+#include <hdffile.hpp>
 
 void setInitialConditions(Variables& vars, const Constants& c) {
   for (int i=c.nx/4; i<3*c.nx/4; ++i) {
@@ -32,7 +33,7 @@ int main() {
 
   setInitialConditions(vars, c);
 
-  Array out(c);
+  Array out(c, "temp");
 
   real t=0;
   real total_time = 0.002;
@@ -46,6 +47,10 @@ int main() {
     f(i,j) += out(i,j)*dt;
   };
 
+  HDFFile icFile("000000.hdf5");
+  vars.vx.saveTo(icFile.file);
+  icFile.close();
+
   vars.vx.render();
   while (t < total_time) {
     vars.vx.applyKernel(diffusionKernel, out);
@@ -53,5 +58,8 @@ int main() {
 
     t += dt;
   }
-  vars.vx.render();
+
+  HDFFile laterFile("000001.hdf5");
+  vars.vx.saveTo(laterFile.file);
+  icFile.close();
 }

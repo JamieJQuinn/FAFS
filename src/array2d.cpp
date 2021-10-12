@@ -1,25 +1,32 @@
 #include <iostream>
+#include <H5Cpp.h>
 
 #include <array2d.hpp>
 #include <constants.hpp>
 
-Array::Array(const Constants& c_in, real initial_val):
-  c{c_in}
+Array::Array(const Constants& c_in, const std::string& name, real initial_val):
+  c{c_in},
+  name{name}
 {
-  data = std::make_unique<real[]>(size());
+  data = new real[size()];
   for (int i=0; i<size(); ++i) {
     data[i] = initial_val;
   }
 }
 
+Array::~Array() {
+  delete data;
+}
+
 int Array::size() const {
+  // 1 set of ghost cells at each boundary
   return (c.nx+2*c.ng)*(c.ny+2*c.ng);
 }
 
 void Array::render() const {
   for (int j=0; j<c.ny; ++j) {
     for (int i=0; i<c.nx; ++i) {
-      std::cout << int((*this)(i,j)) << " ";
+      std::cout << int((*this)(i,j));
     }
     std::cout << std::endl;
   }
@@ -68,4 +75,15 @@ void Array::operator+=(const Array& arr) {
       (*this)(i,j) += arr(i,j);
     }
   }
+}
+
+void Array::saveTo(H5::H5File& file) const {
+  hsize_t dims[2];
+  dims[0] = c.nx + 2*c.ng;
+  dims[1] = c.ny + 2*c.ng;
+  H5::DataSpace dataspace(2, dims);
+  H5::FloatType datatype(H5::PredType::NATIVE_DOUBLE);
+  datatype.setOrder(H5T_ORDER_LE);
+  H5::DataSet ds = file.createDataSet(name, datatype, dataspace);
+  ds.write(data, H5::PredType::NATIVE_DOUBLE);
 }
