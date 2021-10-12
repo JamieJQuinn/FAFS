@@ -7,6 +7,6 @@
 
 class Variables {
   public:
-    Array vx;
+    Array vx, vy;
     Variables(const Constants& c);
 };

@@ -14,7 +14,8 @@ def main():
 
     with h5py.File(fname, "r") as hf:
         data = hf[args.variable][:, :].T
-        plt.imshow(data, origin='lower')
+        im = plt.imshow(data, origin='lower')
+        plt.colorbar(im)
         plt.show()
 
 

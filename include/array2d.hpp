@@ -15,7 +15,9 @@ typedef std::function<void(Array&, const int, const int)> kernelFnInPlace;
 
 class Array {
   public:
-    Array(const Constants& c_in, const std::string& name, real initial_val = 0.0f);
+    Array(const Constants& c_in, const std::string& name, real initialVal = 0.0f);
+    Array(const Constants& c_in, real initialVal = 0.0f);
+    void initialise(real initialVal);
     ~Array();
     const int idx(const int i, const int j) const;
     int size() const;
@@ -27,8 +29,10 @@ class Array {
     Array& operator=(const Array& arr);
     void operator+=(const Array& arr);
     void saveTo(H5::H5File& file) const;
+    void setName(const std::string& name);
   private:
     real* data;
     const Constants& c;
     std::string name;
+    bool hasName;
 };

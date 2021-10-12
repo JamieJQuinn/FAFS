@@ -4,13 +4,25 @@
 #include <array2d.hpp>
 #include <constants.hpp>
 
-Array::Array(const Constants& c_in, const std::string& name, real initial_val):
-  c{c_in},
-  name{name}
+Array::Array(const Constants& c_in, const std::string& name, real initialVal):
+  c{c_in}
 {
+  setName(name);
+  initialise(initialVal);
+}
+
+Array::Array(const Constants& c_in, real initialVal):
+  c{c_in},
+  name{""},
+  hasName{false}
+{
+  initialise(initialVal);
+}
+
+void Array::initialise(real initialVal) {
   data = new real[size()];
   for (int i=0; i<size(); ++i) {
-    data[i] = initial_val;
+    data[i] = initialVal;
   }
 }
 
@@ -78,6 +90,9 @@ void Array::operator+=(const Array& arr) {
 }
 
 void Array::saveTo(H5::H5File& file) const {
+  if (!hasName) {
+    std::cerr << "Cannot save unnamed Array" << std::endl;
+  }
   hsize_t dims[2];
   dims[0] = c.nx + 2*c.ng;
   dims[1] = c.ny + 2*c.ng;
@@ -86,4 +101,9 @@ void Array::saveTo(H5::H5File& file) const {
   datatype.setOrder(H5T_ORDER_LE);
   H5::DataSet ds = file.createDataSet(name, datatype, dataspace);
   ds.write(data, H5::PredType::NATIVE_DOUBLE);
+}
+
+void Array::setName(const std::string& name) {
+  this->name = name;
+  hasName = true;
 }

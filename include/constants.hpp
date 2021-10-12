@@ -11,4 +11,6 @@ class Constants {
     int ng;
     real dx;
     real dy;
+
+    real nu; // viscosity
 };
