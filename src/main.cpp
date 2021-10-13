@@ -1,10 +1,14 @@
 #include <iostream>
 #include <memory>
+#include <cassert>
+#include <cmath>
 
 #include <array2d.hpp>
 #include <variables.hpp>
 #include <precision.hpp>
 #include <hdffile.hpp>
+
+#define DEBUG
 
 void setInitialConditions(Variables& vars, const Constants& c) {
   //for (int i=c.nx/4; i<3*c.nx/4; ++i) {
@@ -70,17 +74,39 @@ int clamp(const int i, const int upper, const int lower) {
   return std::max(std::min(i, upper), lower);
 }
 
+real clamp(const real i, const real upper, const real lower) {
+  return std::max(std::min(i, upper), lower);
+}
+
 real calcAdvection(const Array& f, const int i, const int j, const real dx, const real dy, const real dt, const int nx, const int ny, const int ng, const Array& vx, const Array& vy) {
   // figure out where the current piece has come from (in index space)
-  real oldi = i - dt*vx(i,j)/dx;
-  real oldj = j - dt*vy(i,j)/dy;
+  real x = i - dt*vx(i,j)/dx;
+  real y = j - dt*vy(i,j)/dy;
   // clamp to int indices and ensure inside domain
-  int ip = clamp(int(oldi+1),nx-1+ng,-ng);
-  int im = clamp(int(oldi)  ,nx-1+ng,-ng);
-  int jp = clamp(int(oldj+1),ny-1+ng,-ng);
-  int jm = clamp(int(oldj)  ,ny-1+ng,-ng);
-  // bilinearly interpolate
-  return (f(ip, jp) + f(ip, jm) + f(im, jp) + f(im, jm))/4;
+  int rigIdx = nx-1+ng;
+  int lefIdx = -ng;
+  int topIdx = ny-1+ng;
+  int botIdx = -ng;
+  int x2 = clamp(int(std::floor(x+1)),rigIdx,   lefIdx+1);
+  int x1 = clamp(int(std::floor(x))  ,rigIdx,   lefIdx  );
+  int y2 = clamp(int(std::floor(y+1)),topIdx,   botIdx+1);
+  int y1 = clamp(int(std::floor(y))  ,topIdx-1, botIdx  );
+  x = clamp(x, real(rigIdx), real(lefIdx));
+  y = clamp(y, real(topIdx), real(botIdx));
+  //std::cout << x << ", " << y << std::endl;
+  //std::cout << x1 << ", " << x2 << ", " << y1 << ", " << y2 << std::endl;
+  //std::cout << x1 << ", " << int(x) << std::endl;
+  //assert(x1 != x2);
+  //assert(y1 != y2);
+  //// bilinearly interpolate
+  real x1Weight = (x2-x)/(x2-x1);
+  real x2Weight = (x-x1)/(x2-x1);
+  real fy1 = x1Weight*f(x1, y1) + x2Weight*f(x2, y1);
+  real fy2 = x1Weight*f(x1, y2) + x2Weight*f(x2, y2);
+  real y1Weight = (y2-y)/(y2-y1);
+  real y2Weight = (y-y1)/(y2-y1);
+  real fAv = y1Weight*fy1 + y2Weight*fy2;
+  return fAv;
 }
 
 real calcJacobiStep(const Array& f, const int i, const int j, const real alpha, const real beta, const Array& b) {
