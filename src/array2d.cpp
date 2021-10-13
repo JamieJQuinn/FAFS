@@ -8,6 +8,7 @@ Array::Array(const Constants& c_in, const std::string& name, real initialVal):
   c{c_in}
 {
   setName(name);
+  data = new real[size()];
   initialise(initialVal);
 }
 
@@ -16,11 +17,11 @@ Array::Array(const Constants& c_in, real initialVal):
   name{""},
   hasName{false}
 {
+  data = new real[size()];
   initialise(initialVal);
 }
 
 void Array::initialise(real initialVal) {
-  data = new real[size()];
   for (int i=0; i<size(); ++i) {
     data[i] = initialVal;
   }
@@ -52,10 +53,18 @@ void Array::applyKernel(kernelFn fn, Array& out) const {
   }
 }
 
-void Array::applyKernel(kernelFnInPlace fn, const Array& in) {
+void Array::applyKernel(kernelFnInPlaceInput fn, const Array& in) {
   for (int i=0; i<c.nx; ++i) {
     for (int j=0; j<c.ny; ++j) {
       fn((*this), in, i, j);
+    }
+  }
+}
+
+void Array::applyKernel(kernelFnInPlace fn) {
+  for (int i=0; i<c.nx; ++i) {
+    for (int j=0; j<c.ny; ++j) {
+      fn((*this), i, j);
     }
   }
 }
@@ -111,4 +120,8 @@ void Array::setName(const std::string& name) {
 void Array::swap(Array& arr) {
   std::swap(this->data, arr.data);
   std::swap(this->name, arr.name);
+}
+
+void Array::swapData(Array& arr) {
+  std::swap(this->data, arr.data);
 }

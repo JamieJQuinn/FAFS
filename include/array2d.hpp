@@ -11,7 +11,8 @@
 class Array;
 
 typedef std::function<real(const Array&, const int, const int)> kernelFn;
-typedef std::function<void(Array&, const Array&, const int, const int)> kernelFnInPlace;
+typedef std::function<void(Array&, const Array&, const int, const int)> kernelFnInPlaceInput;
+typedef std::function<void(Array&, const int, const int)> kernelFnInPlace;
 
 class Array {
   public:
@@ -23,7 +24,8 @@ class Array {
     int size() const;
     void render() const;
     void applyKernel(kernelFn fn, Array& out) const;
-    void applyKernel(kernelFnInPlace fn, const Array& in);
+    void applyKernel(kernelFnInPlaceInput fn, const Array& in);
+    void applyKernel(kernelFnInPlace fn);
     const real operator()(const int i, const int j) const;
     real& operator()(const int i, const int j);
     Array& operator=(const Array& arr);
@@ -31,6 +33,7 @@ class Array {
     void saveTo(H5::H5File& file) const;
     void setName(const std::string& name);
     void swap(Array& arr);
+    void swapData(Array& arr);
   private:
     real* data;
     const Constants& c;
