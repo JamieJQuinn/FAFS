@@ -87,27 +87,31 @@ real calcJacobiStep(const Array& f, const int i, const int j, const real alpha, 
   return (alpha*b(i,j) + f(i,j+1) + f(i,j-1) + f(i+1,j) + f(i-1,j))/beta;
 }
 
+void runJacobiIteration(Array& in, Array& out, kernelFn fn, const int iterations=20) {
+  for(int i=0; i<iterations; ++i) {
+    in.applyKernel(fn, out);
+    in.swap(out);
+  }
+}
+
 int main() {
   const Constants c;
 
   Variables vars(c);
 
   setInitialConditions(vars, c);
+  applyBoundaryConditions(vars, c);
 
   Array temp1(c, "temp1");
   Array temp2(c, "temp2");
   Array divw(c, "divw");
 
-  real t=0;
-  real total_time = 0.5;
-  real dt = 0.001;
-
   auto vxDiffusionJacobiKernel = [&](const Array& f, const int i, const int j) {
-    return calcJacobiStep(f, i, j, (c.dx*c.dy)/(c.nu*dt), 4+(c.dx*c.dy)/(c.nu*dt), vars.vx);
+    return calcJacobiStep(f, i, j, (c.dx*c.dy)/(c.nu*c.dt), 4+(c.dx*c.dy)/(c.nu*c.dt), vars.vx);
   };
 
   auto vyDiffusionJacobiKernel = [&](const Array& f, const int i, const int j) {
-    return calcJacobiStep(f, i, j, (c.dx*c.dy)/(c.nu*dt), 4+(c.dx*c.dy)/(c.nu*dt), vars.vy);
+    return calcJacobiStep(f, i, j, (c.dx*c.dy)/(c.nu*c.dt), 4+(c.dx*c.dy)/(c.nu*c.dt), vars.vy);
   };
 
   auto projectionJacobiKernel = [&](const Array& f, const int i, const int j) {
@@ -119,16 +123,16 @@ int main() {
   };
 
   auto advectionKernel = [&](const Array& q, const int i, const int j) {
-    return calcAdvection(q, i, j, c.dx, c.dy, dt, c.nx, c.ny, c.ng, vars.vx, vars.vy);
+    return calcAdvection(q, i, j, c.dx, c.dy, c.dt, c.nx, c.ny, c.ng, vars.vx, vars.vy);
   };
 
-  //auto advectionKernel = [&](const Array& q, const int i, const int j) {
-    //return vars.vx(i,j) * (q(i+1,j)-q(i-1,j))/(2*c.dx) + vars.vy(i,j) * (q(i,j+1) - q(i,j-1))/(2*c.dy);
-  //};
+  auto explicitAdvectionKernel = [&](const Array& q, const int i, const int j) {
+    return vars.vx(i,j) * (q(i+1,j)-q(i-1,j))/(2*c.dx) + vars.vy(i,j) * (q(i,j+1) - q(i,j-1))/(2*c.dy);
+  };
 
-  //auto eulerKernel = [&](Array& f, const Array& in, const int i, const int j) {
-    //f(i,j) += in(i,j)*dt;
-  //};
+  auto eulerKernel = [&](Array& f, const Array& in, const int i, const int j) {
+    f(i,j) += in(i,j)*c.dt;
+  };
 
   auto vxProjectKernel = [&](Array& f, const Array& in, const int i, const int j) {
     f(i,j) -= (in(i+1,j)-in(i-1,j))/(2*c.dx);
@@ -143,12 +147,17 @@ int main() {
   vars.vy.saveTo(icFile.file);
   icFile.close();
 
-  while (t < total_time) {
+  real t=0;
+  while (t < c.totalTime) {
     // ADVECTION
+    // implicit
     vars.vx.applyKernel(advectionKernel, temp1);
     vars.vy.applyKernel(advectionKernel, temp2);
     vars.vx.swapData(temp1);
     vars.vy.swapData(temp2);
+    // explicit
+    //vars.vx.applyKernel(explicitAdvectionKernel, temp1);
+    //vars.vy.applyKernel(explicitAdvectionKernel, temp2);
     //vars.vx.applyKernel(eulerKernel, temp1);
     //vars.vy.applyKernel(eulerKernel, temp2);
     applyBoundaryConditions(vars, c);
@@ -157,37 +166,27 @@ int main() {
     temp1.initialise(0);
     applyVxBC(temp1, c);
     applyVxBC(temp2, c);
-    for(int i=0; i<20; ++i) {
-      temp1.applyKernel(vxDiffusionJacobiKernel, temp2);
-      temp1.swap(temp2);
-    }
+    runJacobiIteration(temp1, temp2, vxDiffusionJacobiKernel);
     vars.vx.swapData(temp1);
 
     temp1.initialise(0);
     applyVyBC(temp1, c);
     applyVyBC(temp2, c);
-    for(int i=0; i<20; ++i) {
-      temp1.applyKernel(vyDiffusionJacobiKernel, temp2);
-      temp1.swap(temp2);
-    }
+    runJacobiIteration(temp1, temp2, vyDiffusionJacobiKernel);
     vars.vy.swapData(temp1);
     applyBoundaryConditions(vars, c);
 
     // PROJECTION
     divw.applyKernel(divergenceKernel);
     temp1.initialise(0);
-    for(int i=0; i<20; ++i) {
-      temp1.applyKernel(projectionJacobiKernel, temp2);
-      temp1.swap(temp2);
-      // Final output is now in temp1
-    }
+    runJacobiIteration(temp1, temp2, projectionJacobiKernel);
     vars.p.swapData(temp1);
     applyVonNeumannBC(vars.p, c);
     vars.vx.applyKernel(vxProjectKernel, vars.p);
     vars.vy.applyKernel(vyProjectKernel, vars.p);
     applyBoundaryConditions(vars, c);
 
-    t += dt;
+    t += c.dt;
   }
 
   //vars.vx.render();

@@ -12,5 +12,8 @@ class Constants {
     real dx;
     real dy;
 
+    real dt;
+    real totalTime;
+
     real nu; // viscosity
 };
