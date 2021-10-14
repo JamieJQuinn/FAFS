@@ -11,6 +11,8 @@ def main():
                         help='variable to plot via imshow')
     parser.add_argument('--streamplot', nargs=2, default=[],
                         help='components of vector to plot via streamlines')
+    parser.add_argument('--quiver', nargs=2, default=[],
+                        help='components of vector to plot via quiver')
 
     args = parser.parse_args()
     fname = args.filename
@@ -26,7 +28,14 @@ def main():
             x = np.linspace(0, 1, v1.shape[0])
             y = np.linspace(0, 1, v1.shape[1])
             X, Y = np.meshgrid(x, y)
-            plt.streamplot(X, Y, v1, v2)
+            plt.streamplot(X, Y, v1, v2, color='k')
+        if args.quiver:
+            v1 = hf[args.quiver[0]][1:-1, 1:-1].T
+            v2 = hf[args.quiver[1]][1:-1, 1:-1].T
+            x = np.linspace(0, 1, v1.shape[0])
+            y = np.linspace(0, 1, v1.shape[1])
+            X, Y = np.meshgrid(x, y)
+            plt.quiver(X, Y, v1, v2)
 
     plt.show()
 
