@@ -10,5 +10,10 @@ include(${CMAKE_BINARY_DIR}/conan_paths.cmake)
 
 find_package(HDF5)
 if(TARGET HDF5::HDF5)
-   target_link_libraries(exe HDF5::HDF5)
+  target_link_libraries(exe PUBLIC HDF5::HDF5)
+endif()
+
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+  target_link_libraries(exe PUBLIC OpenMP::OpenMP_CXX)
 endif()

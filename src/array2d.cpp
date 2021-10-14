@@ -46,6 +46,7 @@ void Array::render() const {
 }
 
 void Array::applyKernel(kernelFn fn, Array& out) const {
+#pragma omp parallel for collapse(2) schedule(static)
   for (int i=0; i<c.nx; ++i) {
     for (int j=0; j<c.ny; ++j) {
       out(i,j) = fn((*this), i, j);
@@ -54,6 +55,7 @@ void Array::applyKernel(kernelFn fn, Array& out) const {
 }
 
 void Array::applyKernel(kernelFnInPlaceInput fn, const Array& in) {
+#pragma omp parallel for collapse(2) schedule(static)
   for (int i=0; i<c.nx; ++i) {
     for (int j=0; j<c.ny; ++j) {
       fn((*this), in, i, j);
@@ -62,6 +64,7 @@ void Array::applyKernel(kernelFnInPlaceInput fn, const Array& in) {
 }
 
 void Array::applyKernel(kernelFnInPlace fn) {
+#pragma omp parallel for collapse(2) schedule(static)
   for (int i=0; i<c.nx; ++i) {
     for (int j=0; j<c.ny; ++j) {
       fn((*this), i, j);
