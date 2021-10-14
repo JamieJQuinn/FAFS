@@ -87,10 +87,10 @@ real calcAdvection(const Array& f, const int i, const int j, const real dx, cons
   int lefIdx = -ng;
   int topIdx = ny-1+ng;
   int botIdx = -ng;
-  int x2 = clamp(int(std::floor(x+1)),rigIdx,   lefIdx+1);
-  int x1 = clamp(int(std::floor(x))  ,rigIdx,   lefIdx  );
-  int y2 = clamp(int(std::floor(y+1)),topIdx,   botIdx+1);
-  int y1 = clamp(int(std::floor(y))  ,topIdx-1, botIdx  );
+  int x2 = clamp(int(std::floor(x+1)),rigIdx, lefIdx);
+  int x1 = clamp(int(std::floor(x))  ,rigIdx, lefIdx);
+  int y2 = clamp(int(std::floor(y+1)),topIdx, botIdx);
+  int y1 = clamp(int(std::floor(y))  ,topIdx, botIdx);
   x = clamp(x, real(rigIdx), real(lefIdx));
   y = clamp(y, real(topIdx), real(botIdx));
   //std::cout << x << ", " << y << std::endl;
@@ -99,13 +99,24 @@ real calcAdvection(const Array& f, const int i, const int j, const real dx, cons
   //assert(x1 != x2);
   //assert(y1 != y2);
   //// bilinearly interpolate
-  real x1Weight = (x2-x)/(x2-x1);
-  real x2Weight = (x-x1)/(x2-x1);
-  real fy1 = x1Weight*f(x1, y1) + x2Weight*f(x2, y1);
-  real fy2 = x1Weight*f(x1, y2) + x2Weight*f(x2, y2);
-  real y1Weight = (y2-y)/(y2-y1);
-  real y2Weight = (y-y1)/(y2-y1);
-  real fAv = y1Weight*fy1 + y2Weight*fy2;
+  real fy1, fy2;
+  if(x1!=x2) {
+    real x1Weight = (x2-x)/(x2-x1);
+    real x2Weight = (x-x1)/(x2-x1);
+    fy1 = x1Weight*f(x1, y1) + x2Weight*f(x2, y1);
+    fy2 = x1Weight*f(x1, y2) + x2Weight*f(x2, y2);
+  } else {
+    fy1 = f(x1, y1);
+    fy2 = f(x1, y2);
+  }
+  real fAv;
+  if(y1!=y2) {
+    real y1Weight = (y2-y)/(y2-y1);
+    real y2Weight = (y-y1)/(y2-y1);
+    fAv = y1Weight*fy1 + y2Weight*fy2;
+  } else {
+    fAv = fy1;
+  }
   return fAv;
 }
 
