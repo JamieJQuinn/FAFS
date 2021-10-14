@@ -164,7 +164,7 @@ int main() {
   };
 
   auto explicitAdvectionKernel = [&](const Array& q, const int i, const int j) {
-    return vars.vx(i,j) * (q(i+1,j)-q(i-1,j))/(2*c.dx) + vars.vy(i,j) * (q(i,j+1) - q(i,j-1))/(2*c.dy);
+    return -(vars.vx(i,j) * (q(i+1,j)-q(i-1,j))/(2*c.dx) + vars.vy(i,j) * (q(i,j+1) - q(i,j-1))/(2*c.dy));
   };
 
   auto eulerKernel = [&](Array& f, const Array& in, const int i, const int j) {
