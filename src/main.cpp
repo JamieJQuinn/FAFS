@@ -234,7 +234,5 @@ int main() {
   vars.vy.saveTo(laterFile.file);
   vars.p.saveTo(laterFile.file);
   divw.saveTo(laterFile.file);
-  temp1.saveTo(laterFile.file);
-  temp2.saveTo(laterFile.file);
   icFile.close();
 }
