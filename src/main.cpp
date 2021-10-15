@@ -226,9 +226,6 @@ int main() {
     t += c.dt;
   }
 
-  //vars.vx.render();
-  //vars.vy.render();
-
   HDFFile laterFile("000001.hdf5");
   vars.vx.saveTo(laterFile.file);
   vars.vy.saveTo(laterFile.file);
