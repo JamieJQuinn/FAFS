@@ -16,8 +16,7 @@ typedef std::function<void(Array&, const int, const int)> kernelFnInPlace;
 
 class Array {
   public:
-    Array(const Constants& c_in, const std::string& name, real initialVal = 0.0f);
-    Array(const Constants& c_in, real initialVal = 0.0f);
+    Array(const int nx, const int ny, const int ng = 0, const std::string& name = "", real initialVal = 0.0f);
     void initialise(real initialVal);
     ~Array();
     const int idx(const int i, const int j) const;
@@ -34,9 +33,10 @@ class Array {
     void setName(const std::string& name);
     void swap(Array& arr);
     void swapData(Array& arr);
+
+    const int nx, ny, ng;
   private:
     real* data;
-    const Constants& c;
     std::string name;
     bool hasName;
 };

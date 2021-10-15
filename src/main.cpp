@@ -10,16 +10,16 @@
 
 #define DEBUG
 
-void setInitialConditions(Variables& vars, const Constants& c) {
-  //for (int i=c.nx/4; i<3*c.nx/4; ++i) {
-    //for (int j=c.ny/4; j<3*c.ny/4; ++j) {
+void setInitialConditions(Variables& vars) {
+  //for (int i=vars.vx.nx/4; i<3*vars.vx.nx/4; ++i) {
+    //for (int j=vars.vx.ny/4; j<3*vars.vx.ny/4; ++j) {
       //vars.vx(i,j) = 0.1;
     //}
   //}
-  //for (int i=0; i<c.nx; ++i) {
-    //for (int j=0; j<c.ny; ++j) {
-      //real x = i*c.dx-0.5;
-      //real y = j*c.dy-0.5;
+  //for (int i=0; i<vars.vx.nx; ++i) {
+    //for (int j=0; j<vars.vx.ny; ++j) {
+      //real x = i*vars.vx.dx-0.5;
+      //real y = j*vars.vx.dy-0.5;
       //real r2 = x*x+y*y;
       //vars.vx(i,j) = 0.01*y/r2;
       //vars.vy(i,j) = -0.01*x/r2;
@@ -27,43 +27,43 @@ void setInitialConditions(Variables& vars, const Constants& c) {
   //}
 }
 
-void applyNoSlipBC(Array& var, const Constants& c) {
-  for (int i=0; i<c.nx; ++i) {
+void applyNoSlipBC(Array& var) {
+  for (int i=0; i<var.nx; ++i) {
     var(i, -1) = 0.0;
-    var(i, c.ny) = 0.0;
+    var(i, var.ny) = 0.0;
   }
-  for(int j=0; j<c.ny; ++j) {
+  for(int j=0; j<var.ny; ++j) {
     var(-1, j) = 0.0;
-    var(c.nx, j) = 0.0;
+    var(var.nx, j) = 0.0;
   }
 }
 
-void applyVonNeumannBC(Array& var, const Constants& c) {
-  for (int i=0; i<c.nx; ++i) {
-    var(i, -1) = var(i, 1);
-    var(i, c.ny) = var(i, c.ny-2);
+void applyVonNeumannBC(Array& var) {
+  for (int i=0; i<var.nx; ++i) {
+    var(i, -1) = var(i, 0);
+    var(i, var.ny) = var(i, var.ny-1);
   }
-  for(int j=0; j<c.ny; ++j) {
-    var(-1, j) = var(1, j);
-    var(c.nx, j) = var(c.nx-2, j);
+  for(int j=0; j<var.ny; ++j) {
+    var(-1, j) = var(0, j);
+    var(var.nx, j) = var(var.nx-1, j);
   }
 }
 
-void applyVxBC(Array& vx, const Constants &c) {
-  applyNoSlipBC(vx, c);
+void applyVxBC(Array& vx) {
+  applyNoSlipBC(vx);
   // Driven cavity flow
-  for (int i=0; i<c.nx; ++i) {
-    vx(i, c.ny) = 1;
+  for (int i=0; i<vx.nx; ++i) {
+    vx(i, vx.ny) = 1;
   }
 }
 
-void applyVyBC(Array& vy, const Constants &c) {
-  applyNoSlipBC(vy, c);
+void applyVyBC(Array& vy) {
+  applyNoSlipBC(vy);
 }
 
-void applyBoundaryConditions(Variables& vars, const Constants& c) {
-  applyVxBC(vars.vx, c);
-  applyVyBC(vars.vy, c);
+void applyBoundaryConditions(Variables& vars) {
+  applyVxBC(vars.vx);
+  applyVyBC(vars.vy);
 }
 
 void render(const Variables& vars) {
@@ -136,12 +136,14 @@ int main() {
 
   Variables vars(c);
 
-  setInitialConditions(vars, c);
-  applyBoundaryConditions(vars, c);
+  setInitialConditions(vars);
+  applyBoundaryConditions(vars);
 
-  Array temp1(c, "temp1");
-  Array temp2(c, "temp2");
-  Array divw(c, "divw");
+  Array boundTemp1(c.nx, c.ny, c.ng, "boundTemp1");
+  Array boundTemp2(c.nx, c.ny, c.ng, "boundTemp2");
+  Array cellTemp1(c.nx+1, c.ny+1, c.ng, "cellTemp1");
+  Array cellTemp2(c.nx+1, c.ny+1, c.ng, "cellTemp2");
+  Array divw(c.nx, c.ny, c.ng, "divw");
 
   auto vxDiffusionJacobiKernel = [&](const Array& f, const int i, const int j) {
     return calcJacobiStep(f, i, j, (c.dx*c.dy)/(c.nu*c.dt), 4+(c.dx*c.dy)/(c.nu*c.dt), vars.vx);
@@ -156,7 +158,7 @@ int main() {
   };
 
   auto divergenceKernel = [&](Array& f, const int i, const int j) {
-    f(i,j) = (vars.vx(i+1,j) - vars.vx(i-1,j))/(2*c.dx) + (vars.vy(i,j+1) - vars.vy(i,j-1))/(2*c.dy);
+    f(i,j) = (vars.vx(i,j) - vars.vx(i-1,j))/c.dx + (vars.vy(i,j) - vars.vy(i,j-1))/c.dy;
   };
 
   auto advectionKernel = [&](const Array& q, const int i, const int j) {
@@ -172,11 +174,11 @@ int main() {
   };
 
   auto vxProjectKernel = [&](Array& f, const Array& in, const int i, const int j) {
-    f(i,j) -= (in(i+1,j)-in(i-1,j))/(2*c.dx);
+    f(i,j) -= (in(i+1,j)-in(i,j))/c.dx;
   };
 
   auto vyProjectKernel = [&](Array& f, const Array& in, const int i, const int j) {
-    f(i,j) -= (in(i,j+1)-in(i,j-1))/(2*c.dy);
+    f(i,j) -= (in(i,j+1)-in(i,j))/c.dy;
   };
 
   HDFFile icFile("000000.hdf5");
@@ -188,40 +190,40 @@ int main() {
   while (t < c.totalTime) {
     // ADVECTION
     // implicit
-    vars.vx.applyKernel(advectionKernel, temp1);
-    vars.vy.applyKernel(advectionKernel, temp2);
-    vars.vx.swapData(temp1);
-    vars.vy.swapData(temp2);
+    vars.vx.applyKernel(advectionKernel, boundTemp1);
+    vars.vy.applyKernel(advectionKernel, boundTemp2);
+    vars.vx.swapData(boundTemp1);
+    vars.vy.swapData(boundTemp2);
     // explicit
-    //vars.vx.applyKernel(explicitAdvectionKernel, temp1);
-    //vars.vy.applyKernel(explicitAdvectionKernel, temp2);
-    //vars.vx.applyKernel(eulerKernel, temp1);
-    //vars.vy.applyKernel(eulerKernel, temp2);
-    applyBoundaryConditions(vars, c);
+    //vars.vx.applyKernel(explicitAdvectionKernel, boundTemp1);
+    //vars.vy.applyKernel(explicitAdvectionKernel, boundTemp2);
+    //vars.vx.applyKernel(eulerKernel, boundTemp1);
+    //vars.vy.applyKernel(eulerKernel, boundTemp2);
+    applyBoundaryConditions(vars);
 
     // DIFFUSION
-    temp1.initialise(0);
-    applyVxBC(temp1, c);
-    applyVxBC(temp2, c);
-    runJacobiIteration(temp1, temp2, vxDiffusionJacobiKernel);
-    vars.vx.swapData(temp1);
+    boundTemp1.initialise(0);
+    applyVxBC(boundTemp1);
+    applyVxBC(boundTemp2);
+    runJacobiIteration(boundTemp1, boundTemp2, vxDiffusionJacobiKernel);
+    vars.vx.swapData(boundTemp1);
 
-    temp1.initialise(0);
-    applyVyBC(temp1, c);
-    applyVyBC(temp2, c);
-    runJacobiIteration(temp1, temp2, vyDiffusionJacobiKernel);
-    vars.vy.swapData(temp1);
-    applyBoundaryConditions(vars, c);
+    boundTemp1.initialise(0);
+    applyVyBC(boundTemp1);
+    applyVyBC(boundTemp2);
+    runJacobiIteration(boundTemp1, boundTemp2, vyDiffusionJacobiKernel);
+    vars.vy.swapData(boundTemp1);
+    applyBoundaryConditions(vars);
 
     // PROJECTION
     divw.applyKernel(divergenceKernel);
-    temp1.initialise(0);
-    runJacobiIteration(temp1, temp2, projectionJacobiKernel);
-    vars.p.swapData(temp1);
-    applyVonNeumannBC(vars.p, c);
+    cellTemp1.initialise(0);
+    runJacobiIteration(cellTemp1, cellTemp2, projectionJacobiKernel);
+    vars.p.swapData(cellTemp1);
+    applyVonNeumannBC(vars.p);
     vars.vx.applyKernel(vxProjectKernel, vars.p);
     vars.vy.applyKernel(vyProjectKernel, vars.p);
-    applyBoundaryConditions(vars, c);
+    applyBoundaryConditions(vars);
 
     t += c.dt;
   }

@@ -3,7 +3,7 @@
 #include <array2d.hpp>
 
 Variables::Variables(const Constants& c):
-  vx(c, "vx"),
-  vy(c, "vy"),
-  p(c, "pressure")
+  vx(c.nx, c.ny, c.ng, "vx"),
+  vy(c.nx, c.ny, c.ng, "vy"),
+  p(c.nx+1, c.ny+1, c.ng, "pressure")
 {}

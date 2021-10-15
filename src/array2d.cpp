@@ -4,19 +4,13 @@
 #include <array2d.hpp>
 #include <constants.hpp>
 
-Array::Array(const Constants& c_in, const std::string& name, real initialVal):
-  c{c_in}
+Array::Array(const int nx_in, const int ny_in, const int ng_in, const std::string& name_in, real initialVal):
+  nx{nx_in},
+  ny{ny_in},
+  ng{ng_in},
+  hasName{name_in != ""}
 {
-  setName(name);
-  data = new real[size()];
-  initialise(initialVal);
-}
-
-Array::Array(const Constants& c_in, real initialVal):
-  c{c_in},
-  name{""},
-  hasName{false}
-{
+  setName(name_in);
   data = new real[size()];
   initialise(initialVal);
 }
@@ -33,12 +27,12 @@ Array::~Array() {
 
 int Array::size() const {
   // 1 set of ghost cells at each boundary
-  return (c.nx+2*c.ng)*(c.ny+2*c.ng);
+  return (nx+2*ng)*(ny+2*ng);
 }
 
 void Array::render() const {
-  for (int j=c.ny-1; j>=0; --j) {
-    for (int i=0; i<c.nx; ++i) {
+  for (int j=ny-1; j>=0; --j) {
+    for (int i=0; i<nx; ++i) {
       std::cout << int((*this)(i,j));
     }
     std::cout << std::endl;
@@ -47,8 +41,8 @@ void Array::render() const {
 
 void Array::applyKernel(kernelFn fn, Array& out) const {
 #pragma omp parallel for collapse(2) schedule(static)
-  for (int i=0; i<c.nx; ++i) {
-    for (int j=0; j<c.ny; ++j) {
+  for (int i=0; i<nx; ++i) {
+    for (int j=0; j<ny; ++j) {
       out(i,j) = fn((*this), i, j);
     }
   }
@@ -56,8 +50,8 @@ void Array::applyKernel(kernelFn fn, Array& out) const {
 
 void Array::applyKernel(kernelFnInPlaceInput fn, const Array& in) {
 #pragma omp parallel for collapse(2) schedule(static)
-  for (int i=0; i<c.nx; ++i) {
-    for (int j=0; j<c.ny; ++j) {
+  for (int i=0; i<nx; ++i) {
+    for (int j=0; j<ny; ++j) {
       fn((*this), in, i, j);
     }
   }
@@ -65,15 +59,15 @@ void Array::applyKernel(kernelFnInPlaceInput fn, const Array& in) {
 
 void Array::applyKernel(kernelFnInPlace fn) {
 #pragma omp parallel for collapse(2) schedule(static)
-  for (int i=0; i<c.nx; ++i) {
-    for (int j=0; j<c.ny; ++j) {
+  for (int i=0; i<nx; ++i) {
+    for (int j=0; j<ny; ++j) {
       fn((*this), i, j);
     }
   }
 }
 
 const int Array::idx(const int i, const int j) const {
-  return (i+c.ng)*(c.ny+2*c.ng) + (j+c.ng);
+  return (i+ng)*(ny+2*ng) + (j+ng);
 }
 
 const real Array::operator()(const int i, const int j) const {
@@ -85,8 +79,8 @@ real& Array::operator()(const int i, const int j) {
 }
 
 Array& Array::operator=(const Array& arr) {
-  for (int i=0; i<c.nx; ++i) {
-    for (int j=0; j<c.ny; ++j) {
+  for (int i=0; i<nx; ++i) {
+    for (int j=0; j<ny; ++j) {
       (*this)(i,j) = arr(i,j);
     }
   }
@@ -94,8 +88,8 @@ Array& Array::operator=(const Array& arr) {
 }
 
 void Array::operator+=(const Array& arr) {
-  for (int i=0; i<c.nx; ++i) {
-    for (int j=0; j<c.ny; ++j) {
+  for (int i=0; i<nx; ++i) {
+    for (int j=0; j<ny; ++j) {
       (*this)(i,j) += arr(i,j);
     }
   }
@@ -106,8 +100,8 @@ void Array::saveTo(H5::H5File& file) const {
     std::cerr << "Cannot save unnamed Array" << std::endl;
   }
   hsize_t dims[2];
-  dims[0] = c.nx + 2*c.ng;
-  dims[1] = c.ny + 2*c.ng;
+  dims[0] = nx + 2*ng;
+  dims[1] = ny + 2*ng;
   H5::DataSpace dataspace(2, dims);
   H5::FloatType datatype(H5::PredType::NATIVE_DOUBLE);
   datatype.setOrder(H5T_ORDER_LE);
