@@ -8,7 +8,8 @@ Array::Array(const int nx_in, const int ny_in, const int ng_in, const std::strin
   nx{nx_in},
   ny{ny_in},
   ng{ng_in},
-  hasName{name_in != ""}
+  hasName{name_in != ""},
+  data{nullptr}
 {
   setName(name_in);
   data = new real[size()];
@@ -22,7 +23,9 @@ void Array::initialise(real initialVal) {
 }
 
 Array::~Array() {
-  delete data;
+  if(data != nullptr) {
+    delete data;
+  }
 }
 
 int Array::size() const {
@@ -44,6 +47,16 @@ void Array::applyKernel(kernelFn fn, Array& out) const {
   for (int i=0; i<nx; ++i) {
     for (int j=0; j<ny; ++j) {
       out(i,j) = fn((*this), i, j);
+    }
+  }
+}
+
+real Array::sum() const {
+  int result = 0;
+#pragma omp parallel for collapse(2) schedule(static) reduction(+,result)
+  for (int i=0; i<nx; ++i) {
+    for (int j=0; j<ny; ++j) {
+      result += (*this)(i,j);
     }
   }
 }
