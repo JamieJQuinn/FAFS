@@ -52,13 +52,14 @@ void Array::applyKernel(kernelFn fn, Array& out) const {
 }
 
 real Array::sum() const {
-  int result = 0;
+  real result = 0;
 #pragma omp parallel for collapse(2) schedule(static) reduction(+:result)
   for (int i=0; i<nx; ++i) {
     for (int j=0; j<ny; ++j) {
       result += (*this)(i,j);
     }
   }
+  return result;
 }
 
 void Array::applyKernel(kernelFnInPlaceInput fn, const Array& in) {
