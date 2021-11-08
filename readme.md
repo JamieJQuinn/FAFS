@@ -6,25 +6,26 @@ FAFS is a fast, eco-friendly, entirely (and delightfully) implicit fluids solver
 
 The code is written in a kernel-based way, that is each step in the computation is defined as a kernel which acts on every grid point in one or many arrays. This approach can be more easily parallelised on heterogeneous platforms, or on specific hardware like FPGAs. Currently, FAFS is only parallelised on multi-core CPUs using OpenMP.
 
+## Dependencies
+
+- [Conan](https://conan.io/) package manager (tested on version 1.40.3)
+- Cmake (tested on version 3.21.4
+
 ## Installation
 
-### Faffing with Conan
+### Faffing with Conan and Cmake
 
-While some dependencies are handled by conan, you must have conan and cmake already installed on your system. This is an unavoidable faff.
-
-FAFS uses hdf5 as its main file format. This and its dependencies are easiest installed via the provided `conanfile.txt`:
-
-```
-conan install .. --build=hdf5 --build=zlib
-```
-
-### Faffing with Cmake
-
-After the dependencies are installed, FAFS can be built with cmake:
+FAFS uses hdf5 as its main file format. This and its dependencies are installed in the least faffy way via the provided `conanfile.txt`:
 
 ```
 mkdir build
 cd build
+conan install .. --build=hdf5 --build=zlib
+```
+
+After the dependencies are installed, FAFS can be built with cmake:
+
+```
 cmake ..
 make
 ```
