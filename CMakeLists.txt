@@ -5,6 +5,7 @@ set(CMAKE_BUILD_TYPE Debug)
 file(GLOB SOURCES "src/*.cpp")
 add_executable (exe ${SOURCES})
 target_include_directories (exe PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_compile_options(exe PRIVATE -Wall -Wextra)
 
 include(${CMAKE_BINARY_DIR}/conan_paths.cmake)
 

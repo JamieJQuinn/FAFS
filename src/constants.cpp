@@ -3,10 +3,10 @@
 Constants::Constants():
   nx{64},
   ny{64},
-  nu{0.1},
-  totalTime{0.7},
+  ng{1},
   dt{0.001},
-  ng{1}
+  totalTime{0.7},
+  nu{0.1}
 {
   dx = 1.0/(nx+1);
   dy = 1.0/(ny+1);

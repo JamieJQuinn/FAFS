@@ -11,11 +11,11 @@
 #define DEBUG
 
 void setInitialConditions(Variables& vars) {
-  //for (int i=vars.vx.nx/4; i<3*vars.vx.nx/4; ++i) {
-    //for (int j=vars.vx.ny/4; j<3*vars.vx.ny/4; ++j) {
-      //vars.vx(i,j) = 0.1;
-    //}
-  //}
+  for (int i=vars.vx.nx/4; i<3*vars.vx.nx/4; ++i) {
+    for (int j=vars.vx.ny/4; j<3*vars.vx.ny/4; ++j) {
+      vars.vx(i,j) = 0.0;
+    }
+  }
   //for (int i=0; i<vars.vx.nx; ++i) {
     //for (int j=0; j<vars.vx.ny; ++j) {
       //real x = i*vars.vx.dx-0.5;

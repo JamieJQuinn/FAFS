@@ -8,8 +8,8 @@ Array::Array(const int nx_in, const int ny_in, const int ng_in, const std::strin
   nx{nx_in},
   ny{ny_in},
   ng{ng_in},
-  hasName{name_in != ""},
-  data{nullptr}
+  data{nullptr},
+  hasName{name_in != ""}
 {
   setName(name_in);
   data = new real[size()];
@@ -80,11 +80,11 @@ void Array::applyKernel(kernelFnInPlace fn) {
   }
 }
 
-const int Array::idx(const int i, const int j) const {
+int Array::idx(const int i, const int j) const {
   return (i+ng)*(ny+2*ng) + (j+ng);
 }
 
-const real Array::operator()(const int i, const int j) const {
+real Array::operator()(const int i, const int j) const {
   return data[idx(i,j)];
 }
 
