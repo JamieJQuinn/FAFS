@@ -18,7 +18,6 @@ class Array {
   public:
     Array(const int nx, const int ny, const int ng = 0, const std::string& name = "", real initialVal = 0.0f);
     void initialise(real initialVal);
-    ~Array();
     int idx(const int i, const int j) const;
     int size() const;
     void render() const;
@@ -37,7 +36,7 @@ class Array {
 
     const int nx, ny, ng;
   private:
-    real* data;
+    std::vector<real> data;
     std::string name;
     bool hasName;
 };

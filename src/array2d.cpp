@@ -8,23 +8,16 @@ Array::Array(const int nx_in, const int ny_in, const int ng_in, const std::strin
   nx{nx_in},
   ny{ny_in},
   ng{ng_in},
-  data{nullptr},
+  data(size()),
   hasName{name_in != ""}
 {
   setName(name_in);
-  data = new real[size()];
   initialise(initialVal);
 }
 
 void Array::initialise(real initialVal) {
   for (int i=0; i<size(); ++i) {
     data[i] = initialVal;
-  }
-}
-
-Array::~Array() {
-  if(data != nullptr) {
-    delete data;
   }
 }
 
@@ -120,7 +113,7 @@ void Array::saveTo(H5::H5File& file) const {
   H5::FloatType datatype(H5::PredType::NATIVE_DOUBLE);
   datatype.setOrder(H5T_ORDER_LE);
   H5::DataSet ds = file.createDataSet(name.c_str(), datatype, dataspace);
-  ds.write(data, H5::PredType::NATIVE_DOUBLE);
+  ds.write(data.data(), H5::PredType::NATIVE_DOUBLE);
 }
 
 void Array::setName(const std::string& name) {
