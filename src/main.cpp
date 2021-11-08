@@ -70,11 +70,8 @@ void render(const Variables& vars) {
   vars.vx.render();
 }
 
-int clamp(const int i, const int upper, const int lower) {
-  return std::max(std::min(i, upper), lower);
-}
-
-real clamp(const real i, const real upper, const real lower) {
+template<class T>
+int clamp(const T i, const T upper, const T lower) {
   return std::max(std::min(i, upper), lower);
 }
 
