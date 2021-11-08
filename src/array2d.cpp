@@ -119,7 +119,7 @@ void Array::saveTo(H5::H5File& file) const {
   H5::DataSpace dataspace(2, dims);
   H5::FloatType datatype(H5::PredType::NATIVE_DOUBLE);
   datatype.setOrder(H5T_ORDER_LE);
-  H5::DataSet ds = file.createDataSet(name, datatype, dataspace);
+  H5::DataSet ds = file.createDataSet(name.c_str(), datatype, dataspace);
   ds.write(data, H5::PredType::NATIVE_DOUBLE);
 }
 
