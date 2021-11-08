@@ -18,3 +18,8 @@ find_package(OpenMP)
 if(OpenMP_CXX_FOUND)
   target_link_libraries(exe PUBLIC OpenMP::OpenMP_CXX)
 endif()
+
+find_package(OpenCL REQUIRED)
+if(TARGET OpenCL::OpenCL)
+  target_link_libraries(exe PUBLIC OpenCL::OpenCL)
+endif()
