@@ -1,3 +1,8 @@
+#define CL_HPP_ENABLE_EXCEPTIONS
+#define CL_HPP_TARGET_OPENCL_VERSION 200
+
+#include <CL/opencl.hpp>
+
 #include <iostream>
 #include <memory>
 #include <cassert>
@@ -7,8 +12,7 @@
 #include <variables.hpp>
 #include <precision.hpp>
 #include <hdffile.hpp>
-
-#define DEBUG
+#include <ocl_utility.hpp>
 
 void setInitialConditions(Variables& vars) {
   for (int i=vars.vx.nx/4; i<3*vars.vx.nx/4; ++i) {
@@ -75,7 +79,7 @@ int clamp(const T i, const T upper, const T lower) {
   return std::max(std::min(i, upper), lower);
 }
 
-real calcAdvection(const Array& f, const int i, const int j, const real dx, const real dy, const real dt, const int nx, const int ny, const int ng, const Array& vx, const Array& vy) {
+real calcAdvection(Array& out, const Array& f, const int i, const int j, const real dx, const real dy, const real dt, const int nx, const int ny, const int ng, const Array& vx, const Array& vy) {
   // figure out where the current piece has come from (in index space)
   real x = i - dt*vx(i,j)/dx;
   real y = j - dt*vy(i,j)/dy;
@@ -114,7 +118,7 @@ real calcAdvection(const Array& f, const int i, const int j, const real dx, cons
   } else {
     fAv = fy1;
   }
-  return fAv;
+  out(i,j) = fAv;
 }
 
 real calcJacobiStep(const Array& f, const int i, const int j, const real alpha, const real beta, const Array& b) {
@@ -128,7 +132,15 @@ void runJacobiIteration(Array& in, Array& out, kernelFn fn, const int iterations
   }
 }
 
-int main() {
+void advect(Array& out, const Array& f, const Array& vx, const Array& vy, const real dx, const real dy, const real dt, const int nx, const int ny, const int ng) {
+  for (int i=0; i<out.nx; ++i) {
+    for(int j=0; j<out.ny; ++j) {
+      calcAdvection(out, f, i, j, dx, dy, dt, nx, ny, ng, vx, vy);
+    }
+  }
+}
+
+void runCPU() {
   const Constants c;
 
   Variables vars(c);
@@ -158,8 +170,8 @@ int main() {
     f(i,j) = (vars.vx(i,j) - vars.vx(i-1,j))/c.dx + (vars.vy(i,j) - vars.vy(i,j-1))/c.dy;
   };
 
-  auto advectionKernel = [&](const Array& q, const int i, const int j) {
-    return calcAdvection(q, i, j, c.dx, c.dy, c.dt, c.nx, c.ny, c.ng, vars.vx, vars.vy);
+  auto advectionKernel = [&](Array& out, const Array& q, const Array& vx, const Array& vy, const int i, const int j) {
+    calcAdvection(out, q, vx, vy, i, j, c.dx, c.dy, c.dt, c.nx, c.ny, c.ng);
   };
 
   auto explicitAdvectionKernel = [&](const Array& q, const int i, const int j) {
@@ -187,8 +199,8 @@ int main() {
   while (t < c.totalTime) {
     // ADVECTION
     // implicit
-    vars.vx.applyKernel(advectionKernel, boundTemp1);
-    vars.vy.applyKernel(advectionKernel, boundTemp2);
+    advect(boundTemp1, vars.vx, vars.vx, vars.vy, c.dx, c.dy, c.dt, c.nx, c.ny, c.ng);
+    advect(boundTemp2, vars.vy, vars.vx, vars.vy, c.dx, c.dy, c.dt, c.nx, c.ny, c.ng);
     vars.vx.swapData(boundTemp1);
     vars.vy.swapData(boundTemp2);
     // explicit
@@ -231,4 +243,33 @@ int main() {
   vars.p.saveTo(laterFile.file);
   divw.saveTo(laterFile.file);
   icFile.close();
+}
+
+int main() {
+  int error = setDefaultPlatform("CUDA");
+  if (error < 0) return -1;
+
+  cl::DeviceCommandQueue deviceQueue = cl::DeviceCommandQueue::makeDefault(
+      cl::Context::getDefault(), cl::Device::getDefault());
+  //runCPU();
+
+  cl::Buffer d_A = cl::Buffer(h_A.begin(), h_A.end(), true);
+  cl::Buffer d_B = cl::Buffer(h_B.begin(), h_B.end(), true);
+  cl::Buffer d_C = cl::Buffer(CL_MEM_READ_WRITE, sizeof(float)*h_C.size());
+
+  // Allocate temp space local to workgroups
+  cl::LocalSpaceArg d_wrk = cl::Local(sizeof(float)*N);
+
+  cl::Program program = buildProgram("mat_mult.cl");
+  // Build kernel with extra workgroup space
+  auto mat_mult_cl = cl::KernelFunctor<
+    int, cl::Buffer, cl::Buffer, cl::Buffer, cl::LocalSpaceArg
+    >(program, kernelName);
+
+  auto start = high_resolution_clock::now();
+
+  // Pass in workgroup
+  mat_mult_cl(cl::EnqueueArgs(cl::NDRange(c.ng, c.ng), cl::NDRange(N), cl::NDRange(N/4)), N, d_A, d_B, d_C, d_wrk);
+
+  cl::copy(d_C, h_C.begin(), h_C.end());
 }
