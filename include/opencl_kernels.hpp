@@ -1,5 +1,9 @@
 #pragma once
 
+#include <precision.hpp>
+
+typedef cl::KernelFunctor<cl::Buffer, real, int, int, int> fillKernelType;
+
 std::string FAFS_PROGRAM{R"CLC(
 typedef float real;
 

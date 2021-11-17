@@ -14,7 +14,7 @@ TEST_CASE( "Test filling array with value", "[array, ocl]" ) {
   arr.initOnDevice();
 
   auto program = buildProgramFromString(FAFS_PROGRAM);
-  auto fill = cl::KernelFunctor<cl::Buffer, real, int, int, int>(program, "fill");
+  auto fill = fillKernelType(program, "fill");
 
   fill(arr.range, arr.getDeviceData(), 1.0f, arr.nx, arr.ny, arr.ng);
 
