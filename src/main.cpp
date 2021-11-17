@@ -163,6 +163,14 @@ void calcAdvectionTerm(Array& out, const Array& f, const Array& vx, const Array&
   }
 }
 
+void calcDiffusionTerm(Array& out, const Array& f, const real dx, const real dy) {
+  for(int i=0; i<out.nx; ++i) {
+    for(int j=0; j<out.ny; ++j) {
+      out(i,j) = (f(i,j+1) + f(i,j-1) + f(i+1,j) + f(i-1,j) - 4*f(i,j))/(dx*dy);
+    }
+  }
+}
+
 void advanceEuler(Array& out, const Array& ddt, const real dt) {
   for(int i=0; i<out.nx; ++i) {
     for(int j=0; j<out.ny; ++j) {
@@ -245,6 +253,9 @@ void runCPU() {
     applyVxBC(boundTemp2);
     runJacobiIteration(boundTemp2, boundTemp1, alpha, beta, vars.vx);
     vars.vx.swapData(boundTemp1);
+    // Explicit
+    //calcDiffusionTerm(boundTemp1, vars.vx, c.dx, c.dy);
+    //advanceEuler(vars.vx, boundTemp1, c.dt);
 
     // Diffuse vy
     // Implicit
@@ -254,6 +265,9 @@ void runCPU() {
     applyVyBC(boundTemp2);
     runJacobiIteration(boundTemp2, boundTemp1, alpha, beta, vars.vy);
     vars.vy.swapData(boundTemp1);
+    // Explicit
+    //calcDiffusionTerm(boundTemp1, vars.vy, c.dx, c.dy);
+    //advanceEuler(vars.vy, boundTemp1, c.dt);
 
     applyBoundaryConditions(vars);
 
