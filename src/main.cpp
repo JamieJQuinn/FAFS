@@ -238,14 +238,18 @@ void runCPU() {
     real beta = 4+(c.dx*c.dy)/(c.nu*c.dt);
 
     // Diffuse vx
-    boundTemp1.initialise(0);
+    // Implicit
+    const real initialGuess = 0.0f;
+    boundTemp1.initialise(initialGuess);
     applyVxBC(boundTemp1);
     applyVxBC(boundTemp2);
     runJacobiIteration(boundTemp2, boundTemp1, alpha, beta, vars.vx);
     vars.vx.swapData(boundTemp1);
 
     // Diffuse vy
-    boundTemp1.initialise(0);
+    // Implicit
+    const real initialGuess = 0.0f;
+    boundTemp1.initialise(initialGuess);
     applyVyBC(boundTemp1);
     applyVyBC(boundTemp2);
     runJacobiIteration(boundTemp2, boundTemp1, alpha, beta, vars.vy);
