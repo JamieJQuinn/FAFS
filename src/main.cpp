@@ -140,11 +140,11 @@ void runJacobiIteration(Array& out, Array& in, const real alpha, const real beta
 }
 
 real ddx(const Array& f, const real dx, const int i, const int j) {
-  return (f(i+1,j)-f(i-1,j))/(2*dx);
+  return (f(i+1,j)-f(i-1,j))/(2.0f*dx);
 }
 
 real ddy(const Array& f, const real dy, const int i, const int j) {
-  return (f(i,j+1) - f(i,j-1))/(2*dy);
+  return (f(i,j+1) - f(i,j-1))/(2.0f*dy);
 }
 
 void advectImplicit(Array& out, const Array& f, const Array& vx, const Array& vy, const real dx, const real dy, const real dt, const int nx, const int ny, const int ng) {
