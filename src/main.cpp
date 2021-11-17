@@ -121,13 +121,21 @@ void calcAdvection(Array& out, const Array& f, const int i, const int j, const r
   out(i,j) = fAv;
 }
 
-real calcJacobiStep(const Array& f, const int i, const int j, const real alpha, const real beta, const Array& b) {
+real calcJacobiStep(const Array& f, const real alpha, const real beta, const Array& b, const int i, const int j) {
   return (alpha*b(i,j) + f(i,j+1) + f(i,j-1) + f(i+1,j) + f(i-1,j))/beta;
 }
 
-void runJacobiIteration(Array& in, Array& out, kernelFn fn, const int iterations=20) {
+void applyJacobiStep(Array& out, const Array& f, const real alpha, const real beta, const Array& b) {
+  for (int i=0; i<out.nx; ++i) {
+    for(int j=0; j<out.ny; ++j) {
+      out(i,j) = calcJacobiStep(f, alpha, beta, b, i, j);
+    }
+  }
+}
+
+void runJacobiIteration(Array& out, Array& in, const real alpha, const real beta, const Array& b, const int iterations=20) {
   for(int i=0; i<iterations; ++i) {
-    in.applyKernel(fn, out);
+    applyJacobiStep(out, in, alpha, beta, b);
     in.swap(out);
   }
 }
@@ -178,18 +186,6 @@ void runCPU() {
   Array cellTemp2(c.nx+1, c.ny+1, c.ng, "cellTemp2");
   Array divw(c.nx, c.ny, c.ng, "divw");
 
-  auto vxDiffusionJacobiKernel = [&](const Array& f, const int i, const int j) {
-    return calcJacobiStep(f, i, j, (c.dx*c.dy)/(c.nu*c.dt), 4+(c.dx*c.dy)/(c.nu*c.dt), vars.vx);
-  };
-
-  auto vyDiffusionJacobiKernel = [&](const Array& f, const int i, const int j) {
-    return calcJacobiStep(f, i, j, (c.dx*c.dy)/(c.nu*c.dt), 4+(c.dx*c.dy)/(c.nu*c.dt), vars.vy);
-  };
-
-  auto projectionJacobiKernel = [&](const Array& f, const int i, const int j) {
-    return calcJacobiStep(f, i, j, -c.dx*c.dy, 4.0f, divw);
-  };
-
   auto divergenceKernel = [&](Array& f, const int i, const int j) {
     f(i,j) = (vars.vx(i,j) - vars.vx(i-1,j))/c.dx + (vars.vy(i,j) - vars.vy(i,j-1))/c.dy;
   };
@@ -211,35 +207,37 @@ void runCPU() {
   while (t < c.totalTime) {
     // ADVECTION
     // implicit
-    advectImplicit(boundTemp1, vars.vx, vars.vx, vars.vy, c.dx, c.dy, c.dt, c.nx, c.ny, c.ng);
-    advectImplicit(boundTemp2, vars.vy, vars.vx, vars.vy, c.dx, c.dy, c.dt, c.nx, c.ny, c.ng);
-    vars.vx.swapData(boundTemp1);
-    vars.vy.swapData(boundTemp2);
+    //advectImplicit(boundTemp1, vars.vx, vars.vx, vars.vy, c.dx, c.dy, c.dt, c.nx, c.ny, c.ng);
+    //advectImplicit(boundTemp2, vars.vy, vars.vx, vars.vy, c.dx, c.dy, c.dt, c.nx, c.ny, c.ng);
+    //vars.vx.swapData(boundTemp1);
+    //vars.vy.swapData(boundTemp2);
     // explicit
-    //calcAdvectionTerm(boundTemp1, vars.vx, vars.vx, vars.vy, c.dx, c.dy);
-    //calcAdvectionTerm(boundTemp2, vars.vy, vars.vx, vars.vy, c.dx, c.dy);
-    //advanceEuler(vars.vx, boundTemp1, c.dt);
-    //advanceEuler(vars.vy, boundTemp2, c.dt);
+    calcAdvectionTerm(boundTemp1, vars.vx, vars.vx, vars.vy, c.dx, c.dy);
+    calcAdvectionTerm(boundTemp2, vars.vy, vars.vx, vars.vy, c.dx, c.dy);
+    advanceEuler(vars.vx, boundTemp1, c.dt);
+    advanceEuler(vars.vy, boundTemp2, c.dt);
+
     applyBoundaryConditions(vars);
 
     // DIFFUSION
     boundTemp1.initialise(0);
     applyVxBC(boundTemp1);
     applyVxBC(boundTemp2);
-    runJacobiIteration(boundTemp1, boundTemp2, vxDiffusionJacobiKernel);
+    runJacobiIteration(boundTemp2, boundTemp1, (c.dx*c.dy)/(c.nu*c.dt), 4+(c.dx*c.dy)/(c.nu*c.dt), vars.vx);
     vars.vx.swapData(boundTemp1);
 
     boundTemp1.initialise(0);
     applyVyBC(boundTemp1);
     applyVyBC(boundTemp2);
-    runJacobiIteration(boundTemp1, boundTemp2, vyDiffusionJacobiKernel);
+    runJacobiIteration(boundTemp2, boundTemp1, (c.dx*c.dy)/(c.nu*c.dt), 4+(c.dx*c.dy)/(c.nu*c.dt), vars.vy);
     vars.vy.swapData(boundTemp1);
+
     applyBoundaryConditions(vars);
 
     // PROJECTION
     divw.applyKernel(divergenceKernel);
     cellTemp1.initialise(0);
-    runJacobiIteration(cellTemp1, cellTemp2, projectionJacobiKernel);
+    runJacobiIteration(cellTemp2, cellTemp1, -c.dx*c.dy, 4.0f, divw);
     vars.p.swapData(cellTemp1);
     applyVonNeumannBC(vars.p);
     vars.vx.applyKernel(vxProjectKernel, vars.p);
