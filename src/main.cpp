@@ -205,10 +205,13 @@ void runCPU() {
   setInitialConditions(vars);
   applyBoundaryConditions(vars);
 
+  // Working arrays located at boundaries
   Array boundTemp1(c.nx, c.ny, c.ng, "boundTemp1");
   Array boundTemp2(c.nx, c.ny, c.ng, "boundTemp2");
+  // Working arrays located at cell centres
   Array cellTemp1(c.nx+1, c.ny+1, c.ng, "cellTemp1");
   Array cellTemp2(c.nx+1, c.ny+1, c.ng, "cellTemp2");
+  // Working array for divergence
   Array divw(c.nx, c.ny, c.ng, "divw");
 
   HDFFile icFile("000000.hdf5");
@@ -236,12 +239,14 @@ void runCPU() {
     real alpha = (c.dx*c.dy)/(c.nu*c.dt);
     real beta = 4+(c.dx*c.dy)/(c.nu*c.dt);
 
+    // Diffuse vx
     boundTemp1.initialise(0);
     applyVxBC(boundTemp1);
     applyVxBC(boundTemp2);
     runJacobiIteration(boundTemp2, boundTemp1, alpha, beta, vars.vx);
     vars.vx.swapData(boundTemp1);
 
+    // Diffuse vy
     boundTemp1.initialise(0);
     applyVyBC(boundTemp1);
     applyVyBC(boundTemp2);
@@ -251,11 +256,14 @@ void runCPU() {
     applyBoundaryConditions(vars);
 
     // PROJECTION
+    // Calculate divergence
     calcDivergence(divw, vars.vx, vars.vy, c.dx, c.dy);
+    // Solve Poisson eq for pressure $\nabla^2 p = - \nabla \cdot v$
     cellTemp1.initialise(0);
     runJacobiIteration(cellTemp2, cellTemp1, -c.dx*c.dy, 4.0f, divw);
     vars.p.swapData(cellTemp1);
     applyVonNeumannBC(vars.p);
+    // Project onto incompressible velocity space
     applyProjectionX(vars.vx, vars.p, c.dx);
     applyProjectionY(vars.vy, vars.p, c.dy);
     applyBoundaryConditions(vars);
