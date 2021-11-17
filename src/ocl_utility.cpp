@@ -46,6 +46,10 @@ auto readFile(std::string_view path) -> std::string {
   // stolen from https://stackoverflow.com/a/116220
   constexpr auto read_size = std::size_t{4096};
   auto stream = std::ifstream{path.data()};
+  if(!stream.is_open()){
+    std::string errorMsg = std::string("Could not open file: ") + std::string(path);
+    throw std::runtime_error(errorMsg);
+  }
   stream.exceptions(std::ios_base::badbit);
 
   auto out = std::string{};
