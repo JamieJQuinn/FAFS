@@ -23,12 +23,12 @@ def main():
             im = plt.imshow(data, origin='lower', extent=(0, 1, 0, 1))
             plt.colorbar(im)
         if args.streamplot:
-            v1 = hf[args.streamplot[0]][1:-1, 1:-1].T
-            v2 = hf[args.streamplot[1]][1:-1, 1:-1].T
+            v1 = hf[args.streamplot[0]][:,:].T
+            v2 = hf[args.streamplot[1]][:,:].T
             x = np.linspace(0, 1, v1.shape[0])
             y = np.linspace(0, 1, v1.shape[1])
             X, Y = np.meshgrid(x, y)
-            plt.streamplot(X, Y, v1, v2, color='k')
+            plt.streamplot(X, Y, v1, v2, color='k', density=2, linewidth=0.5, arrowstyle='->')
         if args.quiver:
             v1 = hf[args.quiver[0]][1:-1, 1:-1].T
             v2 = hf[args.quiver[1]][1:-1, 1:-1].T
