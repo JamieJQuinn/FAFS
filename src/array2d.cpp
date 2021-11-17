@@ -35,15 +35,6 @@ void Array::render() const {
   }
 }
 
-void Array::applyKernel(kernelFn fn, Array& out) const {
-#pragma omp parallel for collapse(2) schedule(static)
-  for (int i=0; i<nx; ++i) {
-    for (int j=0; j<ny; ++j) {
-      out(i,j) = fn((*this), i, j);
-    }
-  }
-}
-
 real Array::sum() const {
   real result = 0;
 #pragma omp parallel for collapse(2) schedule(static) reduction(+:result)
@@ -53,24 +44,6 @@ real Array::sum() const {
     }
   }
   return result;
-}
-
-void Array::applyKernel(kernelFnInPlaceInput fn, const Array& in) {
-#pragma omp parallel for collapse(2) schedule(static)
-  for (int i=0; i<nx; ++i) {
-    for (int j=0; j<ny; ++j) {
-      fn((*this), in, i, j);
-    }
-  }
-}
-
-void Array::applyKernel(kernelFnInPlace fn) {
-#pragma omp parallel for collapse(2) schedule(static)
-  for (int i=0; i<nx; ++i) {
-    for (int j=0; j<ny; ++j) {
-      fn((*this), i, j);
-    }
-  }
 }
 
 int Array::idx(const int i, const int j) const {
