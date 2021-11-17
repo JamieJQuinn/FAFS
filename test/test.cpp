@@ -7,7 +7,7 @@
 TEST_CASE( "Test filling array with value", "[array, ocl]" ) {
   const int nx = 16;
   const int ny = 16;
-  const int ng = 0;
+  const int ng = 1;
 
   Array arr(nx, ny, ng);
 
@@ -24,5 +24,13 @@ TEST_CASE( "Test filling array with value", "[array, ocl]" ) {
     for(int j=0; j<nx; ++j) {
       assert(arr(i,j) == 1.0f);
     }
+  }
+
+  for(int i=0; i<nx; ++i) {
+    assert(arr(i,-1) == 0.0f);
+  }
+
+  for(int j=0; j<nx; ++j) {
+    assert(arr(-1,j) == 0.0f);
   }
 }

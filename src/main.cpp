@@ -25,19 +25,6 @@ int runOCL() {
 
   cl::Buffer d_vx = cl::Buffer(vars.vx.begin(), vars.vx.end(), false);
 
-  cl::Program program = buildProgramFromString(FAFS_PROGRAM);
-  int cl_error;
-  std::string kernelName = "add_one";
-
-  auto addOne_cl = cl::KernelFunctor<
-    cl::Buffer, int, int, int
-    >(program, kernelName, &cl_error);
-
-  if(cl_error != 0) {
-    std::string errorMsg = std::string("OpenCL: Could not create kernel ") + std::string(kernelName) + ": " + std::to_string(cl_error);
-    throw std::runtime_error(errorMsg);
-  }
-
   auto &var = vars.vx;
   auto range = cl::EnqueueArgs(cl::NDRange(var.ng, var.ng), cl::NDRange(var.nx, var.ny), cl::NDRange(var.nx, var.ny));
 
