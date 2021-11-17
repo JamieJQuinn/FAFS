@@ -75,7 +75,7 @@ void render(const Variables& vars) {
 }
 
 template<class T>
-int clamp(const T i, const T upper, const T lower) {
+T clamp(const T i, const T upper, const T lower) {
   return std::max(std::min(i, upper), lower);
 }
 
