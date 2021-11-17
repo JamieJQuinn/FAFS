@@ -20,7 +20,6 @@ class Array {
     void initialise(real initialVal);
     int idx(const int i, const int j) const;
     int size() const;
-    void render() const;
     void applyKernel(kernelFn fn, Array& out) const;
     void applyKernel(kernelFnInPlaceInput fn, const Array& in);
     void applyKernel(kernelFnInPlace fn);

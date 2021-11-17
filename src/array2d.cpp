@@ -26,15 +26,6 @@ int Array::size() const {
   return (nx+2*ng)*(ny+2*ng);
 }
 
-void Array::render() const {
-  for (int j=ny-1; j>=0; --j) {
-    for (int i=0; i<nx; ++i) {
-      std::cout << int((*this)(i,j));
-    }
-    std::cout << std::endl;
-  }
-}
-
 real Array::sum() const {
   real result = 0;
 #pragma omp parallel for collapse(2) schedule(static) reduction(+:result)
