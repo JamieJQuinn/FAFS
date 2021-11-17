@@ -181,6 +181,22 @@ void calcDivergence(Array& out, const Array& fx, const Array& fy, const real dx,
   }
 }
 
+void applyProjectionX(Array& out, const Array& f, const real dx) {
+  for(int i=0; i<out.nx; ++i) {
+    for(int j=0; j<out.ny; ++j) {
+      out(i,j) -= (f(i+1,j)-f(i,j))/dx;
+    }
+  }
+}
+
+void applyProjectionY(Array& out, const Array& f, const real dy) {
+  for(int i=0; i<out.nx; ++i) {
+    for(int j=0; j<out.ny; ++j) {
+      out(i,j) -= (f(i,j+1)-f(i,j))/dy;
+    }
+  }
+}
+
 void runCPU() {
   const Constants c;
 
@@ -194,14 +210,6 @@ void runCPU() {
   Array cellTemp1(c.nx+1, c.ny+1, c.ng, "cellTemp1");
   Array cellTemp2(c.nx+1, c.ny+1, c.ng, "cellTemp2");
   Array divw(c.nx, c.ny, c.ng, "divw");
-
-  auto vxProjectKernel = [&](Array& f, const Array& in, const int i, const int j) {
-    f(i,j) -= (in(i+1,j)-in(i,j))/c.dx;
-  };
-
-  auto vyProjectKernel = [&](Array& f, const Array& in, const int i, const int j) {
-    f(i,j) -= (in(i,j+1)-in(i,j))/c.dy;
-  };
 
   HDFFile icFile("000000.hdf5");
   vars.vx.saveTo(icFile.file);
@@ -248,8 +256,8 @@ void runCPU() {
     runJacobiIteration(cellTemp2, cellTemp1, -c.dx*c.dy, 4.0f, divw);
     vars.p.swapData(cellTemp1);
     applyVonNeumannBC(vars.p);
-    vars.vx.applyKernel(vxProjectKernel, vars.p);
-    vars.vy.applyKernel(vyProjectKernel, vars.p);
+    applyProjectionX(vars.vx, vars.p, c.dx);
+    applyProjectionY(vars.vy, vars.p, c.dy);
     applyBoundaryConditions(vars);
 
     t += c.dt;
