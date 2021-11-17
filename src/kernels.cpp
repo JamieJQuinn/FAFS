@@ -3,5 +3,5 @@
 
 Kernels::Kernels() :
   program{buildProgramFromString(FAFS_PROGRAM)},
-  addOne(program, "add_one")
+  fill(program, "fill")
 {}

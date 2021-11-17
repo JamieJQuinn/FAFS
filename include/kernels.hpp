@@ -7,5 +7,5 @@ class Kernels {
     Kernels();
   private:
     cl::Program program;
-    cl::KernelFunctor<cl::Buffer, int, int, int> addOne;
+    cl::KernelFunctor<cl::Buffer, int, int, int> fill;
 };
