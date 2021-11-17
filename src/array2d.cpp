@@ -9,7 +9,8 @@ Array::Array(const int nx_in, const int ny_in, const int ng_in, const std::strin
   ny{ny_in},
   ng{ng_in},
   data(size()),
-  hasName{name_in != ""}
+  hasName{name_in != ""},
+  isDeviceDirty{true}
 {
   setName(name_in);
   initialise(initialVal);
@@ -86,18 +87,27 @@ void Array::setName(const std::string& name) {
 }
 
 void Array::swap(Array& arr) {
-  std::swap(this->data, arr.data);
-  std::swap(this->name, arr.name);
+  std::swap(data, arr.data);
+  std::swap(name, arr.name);
 }
 
 void Array::swapData(Array& arr) {
-  std::swap(this->data, arr.data);
+  std::swap(data, arr.data);
 }
 
 std::vector<real>::iterator Array::begin() {
-  return this->data.begin();
+  return data.begin();
 }
 
 std::vector<real>::iterator Array::end() {
-  return this->data.end();
+  isDeviceDirty = true;
+  return data.end();
+}
+
+const cl::Buffer& Array::getDeviceData() const {
+  return d_data;
+}
+
+cl::Buffer& Array::getDeviceData() {
+  return d_data;
 }

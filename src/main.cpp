@@ -38,16 +38,18 @@ int runOCL() {
     throw std::runtime_error(errorMsg);
   }
 
-  addOne_cl(cl::EnqueueArgs(cl::NDRange(vars.vx.ng, vars.vx.ng), cl::NDRange(vars.vx.nx, vars.vx.ny), cl::NDRange(vars.vx.nx, vars.vx.ny)), d_vx, vars.vx.nx, vars.vx.ny, vars.vx.ng);
+  auto &var = vars.vx;
+  auto range = cl::EnqueueArgs(cl::NDRange(var.ng, var.ng), cl::NDRange(var.nx, var.ny), cl::NDRange(var.nx, var.ny));
+
+  addOne_cl(range, var.getDeviceData(), vars.vx.nx, vars.vx.ny, vars.vx.ng);
 
   cl::copy(d_vx, vars.vx.begin(), vars.vx.end());
 
-  for(int i=-1; i<=vars.vx.nx; ++i) {
-    for(int j=-1; j<=vars.vx.nx; ++j) {
-      std::cout << vars.vx(i,j) << ", ";
-      //assert(vars.vx(i,j) == 1.0f);
+  for(int i=0; i<vars.vx.nx; ++i) {
+    for(int j=0; j<vars.vx.nx; ++j) {
+      //std::cout << vars.vx(i,j) << ", ";
+      assert(vars.vx(i,j) == 1.0f);
     }
-    std::cout << std::endl;
   }
 
   return 0;

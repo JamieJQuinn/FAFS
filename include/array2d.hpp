@@ -5,6 +5,7 @@
 #include <functional>
 #include <H5Cpp.h>
 
+#include <ocl_utility.hpp>
 #include <precision.hpp>
 #include <constants.hpp>
 
@@ -34,10 +35,17 @@ class Array {
     void swapData(Array& arr);
     std::vector<real>::iterator begin();
     std::vector<real>::iterator end();
+    const cl::Buffer& getDeviceData() const;
+    cl::Buffer& getDeviceData();
+
+    void toDevice();
+    void toHost();
 
     const int nx, ny, ng;
   private:
     std::vector<real> data;
+    cl::Buffer d_data; // data on device
     std::string name;
     bool hasName;
+    bool isDeviceDirty;
 };
