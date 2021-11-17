@@ -37,6 +37,8 @@ def main():
             X, Y = np.meshgrid(x, y)
             plt.quiver(X, Y, v1, v2)
 
+    plt.ylim(0,1)
+    plt.xlim(0,1)
     plt.show()
 
 
