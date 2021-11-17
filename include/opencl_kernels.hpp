@@ -46,4 +46,24 @@ __kernel void applyVonNeumannBC_y(
   i_interior = gid(i, ny, nx, ny, ng);
   out[i_boundary] = out[i_interior];
 }
+
+__kernel void applyVonNeumannBC_x(
+  __global real *out,
+  __private const int nx,
+  __private const int ny,
+  __private const int ng
+)
+{
+  int j = get_global_id(1);
+
+  // Set lower boundary
+  int i_boundary = gid(0, j, nx, ny, ng);
+  int i_interior = gid(1, j, nx, ny, ng);
+  out[i_boundary] = out[i_interior];
+
+  // Set upper boundary
+  i_boundary = gid(nx+ng, j, nx, ny, ng);
+  i_interior = gid(nx, j, nx, ny, ng);
+  out[i_boundary] = out[i_interior];
+}
 )CLC"};

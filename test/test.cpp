@@ -90,10 +90,11 @@ TEST_CASE( "Test applying von Neumann boundary conditions on device", "[array, o
   auto program = buildProgramFromString(FAFS_PROGRAM);
   auto fill = fillKernel(program, "fill");
   auto applyVonNeumannBC_y = vonNeumannKernel(program, "applyVonNeumannBC_y");
+  auto applyVonNeumannBC_x = vonNeumannKernel(program, "applyVonNeumannBC_x");
 
   fill(arr.range, arr.getDeviceData(), 1.0f, arr.nx, arr.ny, arr.ng);
   applyVonNeumannBC_y(arr.lowerBRange, arr.getDeviceData(), arr.nx, arr.ny, arr.ng);
-  //applyVonNeumannBC_y(arr.upperBRange, arr.getDeviceData(), arr.nx, arr.ny, arr.ng);
+  applyVonNeumannBC_x(arr.leftBRange, arr.getDeviceData(), arr.nx, arr.ny, arr.ng);
 
   arr.toHost();
 
@@ -111,11 +112,11 @@ TEST_CASE( "Test applying von Neumann boundary conditions on device", "[array, o
     REQUIRE(arr(i,ny) == 1.0f);
   }
 
-  //for(int j=0; j<ny; ++j) {
-    //REQUIRE(arr(-1,j) == 4.0f);
-  //}
+  for(int j=0; j<ny; ++j) {
+    REQUIRE(arr(-1,j) == 1.0f);
+  }
 
-  //for(int j=0; j<ny; ++j) {
-    //REQUIRE(arr(nx,j) == 5.0f);
-  //}
+  for(int j=0; j<ny; ++j) {
+    REQUIRE(arr(nx,j) == 1.0f);
+  }
 }
