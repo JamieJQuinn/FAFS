@@ -17,6 +17,6 @@ __kernel void add_one(
   int i = get_global_id(0);
   int j = get_global_id(1);
   int idx = gid(i, j, nx, ny, ng);
-  out[idx] = i;
+  out[idx] = 1;
 }
 )CLC"};
