@@ -79,7 +79,7 @@ int clamp(const T i, const T upper, const T lower) {
   return std::max(std::min(i, upper), lower);
 }
 
-real calcAdvection(Array& out, const Array& f, const int i, const int j, const real dx, const real dy, const real dt, const int nx, const int ny, const int ng, const Array& vx, const Array& vy) {
+void calcAdvection(Array& out, const Array& f, const int i, const int j, const real dx, const real dy, const real dt, const int nx, const int ny, const int ng, const Array& vx, const Array& vy) {
   // figure out where the current piece has come from (in index space)
   real x = i - dt*vx(i,j)/dx;
   real y = j - dt*vy(i,j)/dy;
@@ -132,10 +132,34 @@ void runJacobiIteration(Array& in, Array& out, kernelFn fn, const int iterations
   }
 }
 
-void advect(Array& out, const Array& f, const Array& vx, const Array& vy, const real dx, const real dy, const real dt, const int nx, const int ny, const int ng) {
+real ddx(const Array& f, const real dx, const int i, const int j) {
+  return (f(i+1,j)-f(i-1,j))/(2*dx);
+}
+
+real ddy(const Array& f, const real dy, const int i, const int j) {
+  return (f(i,j+1) - f(i,j-1))/(2*dy);
+}
+
+void advectImplicit(Array& out, const Array& f, const Array& vx, const Array& vy, const real dx, const real dy, const real dt, const int nx, const int ny, const int ng) {
   for (int i=0; i<out.nx; ++i) {
     for(int j=0; j<out.ny; ++j) {
       calcAdvection(out, f, i, j, dx, dy, dt, nx, ny, ng, vx, vy);
+    }
+  }
+}
+
+void calcAdvectionTerm(Array& out, const Array& f, const Array& vx, const Array& vy, const real dx, const real dy) {
+  for(int i=0; i<out.nx; ++i) {
+    for(int j=0; j<out.ny; ++j) {
+      out(i,j) = -(vx(i,j) * ddx(f, dx, i, j) + vy(i,j) * ddy(f, dy, i, j));
+    }
+  }
+}
+
+void advanceEuler(Array& out, const Array& ddt, const real dt) {
+  for(int i=0; i<out.nx; ++i) {
+    for(int j=0; j<out.ny; ++j) {
+      out(i,j) += ddt(i,j)*dt;
     }
   }
 }
@@ -170,18 +194,6 @@ void runCPU() {
     f(i,j) = (vars.vx(i,j) - vars.vx(i-1,j))/c.dx + (vars.vy(i,j) - vars.vy(i,j-1))/c.dy;
   };
 
-  auto advectionKernel = [&](Array& out, const Array& q, const Array& vx, const Array& vy, const int i, const int j) {
-    calcAdvection(out, q, vx, vy, i, j, c.dx, c.dy, c.dt, c.nx, c.ny, c.ng);
-  };
-
-  auto explicitAdvectionKernel = [&](const Array& q, const int i, const int j) {
-    return -(vars.vx(i,j) * (q(i+1,j)-q(i-1,j))/(2*c.dx) + vars.vy(i,j) * (q(i,j+1) - q(i,j-1))/(2*c.dy));
-  };
-
-  auto eulerKernel = [&](Array& f, const Array& in, const int i, const int j) {
-    f(i,j) += in(i,j)*c.dt;
-  };
-
   auto vxProjectKernel = [&](Array& f, const Array& in, const int i, const int j) {
     f(i,j) -= (in(i+1,j)-in(i,j))/c.dx;
   };
@@ -199,15 +211,15 @@ void runCPU() {
   while (t < c.totalTime) {
     // ADVECTION
     // implicit
-    advect(boundTemp1, vars.vx, vars.vx, vars.vy, c.dx, c.dy, c.dt, c.nx, c.ny, c.ng);
-    advect(boundTemp2, vars.vy, vars.vx, vars.vy, c.dx, c.dy, c.dt, c.nx, c.ny, c.ng);
+    advectImplicit(boundTemp1, vars.vx, vars.vx, vars.vy, c.dx, c.dy, c.dt, c.nx, c.ny, c.ng);
+    advectImplicit(boundTemp2, vars.vy, vars.vx, vars.vy, c.dx, c.dy, c.dt, c.nx, c.ny, c.ng);
     vars.vx.swapData(boundTemp1);
     vars.vy.swapData(boundTemp2);
     // explicit
-    //vars.vx.applyKernel(explicitAdvectionKernel, boundTemp1);
-    //vars.vy.applyKernel(explicitAdvectionKernel, boundTemp2);
-    //vars.vx.applyKernel(eulerKernel, boundTemp1);
-    //vars.vy.applyKernel(eulerKernel, boundTemp2);
+    //calcAdvectionTerm(boundTemp1, vars.vx, vars.vx, vars.vy, c.dx, c.dy);
+    //calcAdvectionTerm(boundTemp2, vars.vy, vars.vx, vars.vy, c.dx, c.dy);
+    //advanceEuler(vars.vx, boundTemp1, c.dt);
+    //advanceEuler(vars.vy, boundTemp2, c.dt);
     applyBoundaryConditions(vars);
 
     // DIFFUSION
@@ -246,30 +258,31 @@ void runCPU() {
 }
 
 int main() {
-  int error = setDefaultPlatform("CUDA");
-  if (error < 0) return -1;
+  runCPU();
 
-  cl::DeviceCommandQueue deviceQueue = cl::DeviceCommandQueue::makeDefault(
-      cl::Context::getDefault(), cl::Device::getDefault());
-  //runCPU();
+  //int error = setDefaultPlatform("CUDA");
+  //if (error < 0) return -1;
 
-  cl::Buffer d_A = cl::Buffer(h_A.begin(), h_A.end(), true);
-  cl::Buffer d_B = cl::Buffer(h_B.begin(), h_B.end(), true);
-  cl::Buffer d_C = cl::Buffer(CL_MEM_READ_WRITE, sizeof(float)*h_C.size());
+  //cl::DeviceCommandQueue deviceQueue = cl::DeviceCommandQueue::makeDefault(
+      //cl::Context::getDefault(), cl::Device::getDefault());
 
-  // Allocate temp space local to workgroups
-  cl::LocalSpaceArg d_wrk = cl::Local(sizeof(float)*N);
+  //cl::Buffer d_A = cl::Buffer(h_A.begin(), h_A.end(), true);
+  //cl::Buffer d_B = cl::Buffer(h_B.begin(), h_B.end(), true);
+  //cl::Buffer d_C = cl::Buffer(CL_MEM_READ_WRITE, sizeof(float)*h_C.size());
 
-  cl::Program program = buildProgram("mat_mult.cl");
-  // Build kernel with extra workgroup space
-  auto mat_mult_cl = cl::KernelFunctor<
-    int, cl::Buffer, cl::Buffer, cl::Buffer, cl::LocalSpaceArg
-    >(program, kernelName);
+  //// Allocate temp space local to workgroups
+  //cl::LocalSpaceArg d_wrk = cl::Local(sizeof(float)*N);
 
-  auto start = high_resolution_clock::now();
+  //cl::Program program = buildProgram("mat_mult.cl");
+  //// Build kernel with extra workgroup space
+  //auto mat_mult_cl = cl::KernelFunctor<
+    //int, cl::Buffer, cl::Buffer, cl::Buffer, cl::LocalSpaceArg
+    //>(program, kernelName);
 
-  // Pass in workgroup
-  mat_mult_cl(cl::EnqueueArgs(cl::NDRange(c.ng, c.ng), cl::NDRange(N), cl::NDRange(N/4)), N, d_A, d_B, d_C, d_wrk);
+  //auto start = high_resolution_clock::now();
 
-  cl::copy(d_C, h_C.begin(), h_C.end());
+  //// Pass in workgroup
+  //mat_mult_cl(cl::EnqueueArgs(cl::NDRange(c.ng, c.ng), cl::NDRange(N), cl::NDRange(N/4)), N, d_A, d_B, d_C, d_wrk);
+
+  //cl::copy(d_C, h_C.begin(), h_C.end());
 }
