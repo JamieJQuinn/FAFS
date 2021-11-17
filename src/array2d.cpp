@@ -10,10 +10,15 @@ Array::Array(const int nx_in, const int ny_in, const int ng_in, const std::strin
   ng{ng_in},
   data(size()),
   hasName{name_in != ""},
-  isDeviceDirty{true}
+  isDeviceDirty{true},
+  range(cl::NDRange(ng, ng), cl::NDRange(nx, ny), cl::NDRange(nx, ny))
 {
   setName(name_in);
   initialise(initialVal);
+}
+
+void Array::initOnDevice(bool readOnly) {
+  d_data = cl::Buffer(begin(), end(), readOnly);
 }
 
 void Array::initialise(real initialVal) {
@@ -110,4 +115,13 @@ const cl::Buffer& Array::getDeviceData() const {
 
 cl::Buffer& Array::getDeviceData() {
   return d_data;
+}
+
+void Array::toDevice() {
+  cl::copy(begin(), end(), d_data);
+}
+
+void Array::toHost() {
+  cl::copy(d_data, begin(), end());
+  isDeviceDirty = false;
 }

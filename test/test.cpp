@@ -1,24 +1,28 @@
+#include <iostream>
 #include <catch2/catch_test_macros.hpp>
 #include <ocl_utility.hpp>
-#include <kernels.hpp>
+#include <opencl_kernels.hpp>
+#include <array2d.hpp>
 
-//TEST_CASE( "Simple OpenCL example works", "[array, ocl]" ) {
-  //cl::DeviceCommandQueue deviceQueue = cl::DeviceCommandQueue::makeDefault(
-      //cl::Context::getDefault(), cl::Device::getDefault());
-  //const int nx = 16;
-  //const int ny = 16;
-  //const int ng = 0;
+TEST_CASE( "Test filling array with value", "[array, ocl]" ) {
+  const int nx = 16;
+  const int ny = 16;
+  const int ng = 0;
 
-  //Array arr(nx, ny, ng);
+  Array arr(nx, ny, ng);
 
-  //arr.initOnDevice(false);
+  arr.initOnDevice();
 
-  //REQUIRE( Factorial(1) == 1 );
-  //REQUIRE( Factorial(2) == 2 );
-  //REQUIRE( Factorial(3) == 6 );
-  //REQUIRE( Factorial(10) == 3628800 );
-//}
+  auto program = buildProgramFromString(FAFS_PROGRAM);
+  auto fill = cl::KernelFunctor<cl::Buffer, real, int, int, int>(program, "fill");
 
-TEST_CASE( "Loading kernels works", "[kernels]") {
-  Kernels kernels;
+  fill(arr.range, arr.getDeviceData(), 1.0f, arr.nx, arr.ny, arr.ng);
+
+  arr.toHost();
+
+  for(int i=0; i<nx; ++i) {
+    for(int j=0; j<nx; ++j) {
+      assert(arr(i,j) == 1.0f);
+    }
+  }
 }

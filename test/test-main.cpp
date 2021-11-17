@@ -25,6 +25,9 @@ int main( int argc, char* argv[] )
   std::cout << "Running tests on platform: " << platform << std::endl;
 
   setDefaultPlatform(platform);
+  cl::DeviceCommandQueue deviceQueue = cl::DeviceCommandQueue::makeDefault(
+      cl::Context::getDefault(), cl::Device::getDefault());
+
 
   return session.run();
 }

@@ -18,6 +18,7 @@ typedef std::function<void(Array&, const int, const int)> kernelFnInPlace;
 class Array {
   public:
     Array(const int nx, const int ny, const int ng = 0, const std::string& name = "", real initialVal = 0.0f);
+    void initOnDevice(bool readOnly = false);
     void initialise(real initialVal);
     int idx(const int i, const int j) const;
     int size() const;
@@ -42,6 +43,7 @@ class Array {
     void toHost();
 
     const int nx, ny, ng;
+    cl::EnqueueArgs range;
   private:
     std::vector<real> data;
     cl::Buffer d_data; // data on device
