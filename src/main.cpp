@@ -97,8 +97,6 @@ void calcAdvection(Array& out, const Array& f, const int i, const int j, const r
   //std::cout << x << ", " << y << std::endl;
   //std::cout << x1 << ", " << x2 << ", " << y1 << ", " << y2 << std::endl;
   //std::cout << x1 << ", " << int(x) << std::endl;
-  //assert(x1 != x2);
-  //assert(y1 != y2);
   //// bilinearly interpolate
   real fy1, fy2;
   if(x1!=x2) {
