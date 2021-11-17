@@ -5,5 +5,6 @@
 #include <string>
 #include <CL/opencl.hpp>
 
-cl::Program buildProgram(const std::string& filename);
+cl::Program buildProgramFromFile(const std::string& filename);
+cl::Program buildProgramFromString(const std::string& source);
 int setDefaultPlatform(const std::string& targetName);

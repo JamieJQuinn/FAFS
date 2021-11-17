@@ -3,34 +3,56 @@
 #include <cassert>
 
 #include <ocl_utility.hpp>
+#include <constants.hpp>
+#include <precision.hpp>
 #include <openmp_implementation.hpp>
+#include <variables.hpp>
+#include <array2d.hpp>
+#include <opencl_kernels.hpp>
+
+int runOCL() {
+  const Constants c;
+
+  int error = setDefaultPlatform("CUDA");
+  if (error < 0) return -1;
+
+  cl::DeviceCommandQueue deviceQueue = cl::DeviceCommandQueue::makeDefault(
+      cl::Context::getDefault(), cl::Device::getDefault());
+
+  Variables vars(c);
+
+  setInitialConditions(vars);
+
+  cl::Buffer d_vx = cl::Buffer(vars.vx.begin(), vars.vx.end(), false);
+
+  cl::Program program = buildProgramFromString(FAFS_PROGRAM);
+  int cl_error;
+  std::string kernelName = "add_one";
+
+  auto addOne_cl = cl::KernelFunctor<
+    cl::Buffer, int, int, int
+    >(program, kernelName, &cl_error);
+
+  if(cl_error != 0) {
+    std::string errorMsg = std::string("OpenCL: Could not create kernel ") + std::string(kernelName) + ": " + std::to_string(cl_error);
+    throw std::runtime_error(errorMsg);
+  }
+
+  addOne_cl(cl::EnqueueArgs(cl::NDRange(vars.vx.ng, vars.vx.ng), cl::NDRange(vars.vx.nx, vars.vx.ny), cl::NDRange(vars.vx.nx, vars.vx.ny)), d_vx, vars.vx.nx, vars.vx.ny, vars.vx.ng);
+
+  cl::copy(d_vx, vars.vx.begin(), vars.vx.end());
+
+  for(int i=-1; i<=vars.vx.nx; ++i) {
+    for(int j=-1; j<=vars.vx.nx; ++j) {
+      std::cout << vars.vx(i,j) << ", ";
+      //assert(vars.vx(i,j) == 1.0f);
+    }
+    std::cout << std::endl;
+  }
+
+  return 0;
+}
 
 int main() {
-  runCPU();
-
-  //int error = setDefaultPlatform("CUDA");
-  //if (error < 0) return -1;
-
-  //cl::DeviceCommandQueue deviceQueue = cl::DeviceCommandQueue::makeDefault(
-      //cl::Context::getDefault(), cl::Device::getDefault());
-
-  //cl::Buffer d_A = cl::Buffer(h_A.begin(), h_A.end(), true);
-  //cl::Buffer d_B = cl::Buffer(h_B.begin(), h_B.end(), true);
-  //cl::Buffer d_C = cl::Buffer(CL_MEM_READ_WRITE, sizeof(float)*h_C.size());
-
-  //// Allocate temp space local to workgroups
-  //cl::LocalSpaceArg d_wrk = cl::Local(sizeof(float)*N);
-
-  //cl::Program program = buildProgram("mat_mult.cl");
-  //// Build kernel with extra workgroup space
-  //auto mat_mult_cl = cl::KernelFunctor<
-    //int, cl::Buffer, cl::Buffer, cl::Buffer, cl::LocalSpaceArg
-    //>(program, kernelName);
-
-  //auto start = high_resolution_clock::now();
-
-  //// Pass in workgroup
-  //mat_mult_cl(cl::EnqueueArgs(cl::NDRange(c.ng, c.ng), cl::NDRange(N), cl::NDRange(N/4)), N, d_A, d_B, d_C, d_wrk);
-
-  //cl::copy(d_C, h_C.begin(), h_C.end());
+  return runOCL();
 }

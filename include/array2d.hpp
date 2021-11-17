@@ -32,6 +32,8 @@ class Array {
     void setName(const std::string& name);
     void swap(Array& arr);
     void swapData(Array& arr);
+    std::vector<real>::iterator begin();
+    std::vector<real>::iterator end();
 
     const int nx, ny, ng;
   private:

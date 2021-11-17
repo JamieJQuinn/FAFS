@@ -61,16 +61,22 @@ auto readFile(std::string_view path) -> std::string {
   return out;
 }
 
-cl::Program buildProgram(const std::string& filename) {
+cl::Program buildProgramFromString(const std::string& source) {
   // Compile kernel source into program
-  cl::Program program(readFile(filename), false);
-  try {
-    program.build("-cl-std=CL2.0");
-  }
-  catch (...) {
+  int cl_error;
+  cl::Program program(source, true, &cl_error);
+
+  if(cl_error != 0) {
     std::string bl = program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(cl::Device::getDefault());
     std::cerr << bl << std::endl;
+
+    std::string errorMsg = std::string("OpenCL: Could not compile kernel.");
+    throw std::runtime_error(errorMsg);
   }
 
   return program;
+}
+
+cl::Program buildProgramFromFile(const std::string& filename) {
+  return buildProgramFromString(readFile(filename));
 }

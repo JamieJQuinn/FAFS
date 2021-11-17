@@ -1,8 +1,8 @@
 #include <constants.hpp>
 
 Constants::Constants():
-  nx{64},
-  ny{64},
+  nx{16},
+  ny{16},
   ng{1},
   dt{0.001},
   totalTime{0.7},

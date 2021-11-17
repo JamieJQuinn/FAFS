@@ -93,3 +93,11 @@ void Array::swap(Array& arr) {
 void Array::swapData(Array& arr) {
   std::swap(this->data, arr.data);
 }
+
+std::vector<real>::iterator Array::begin() {
+  return this->data.begin();
+}
+
+std::vector<real>::iterator Array::end() {
+  return this->data.end();
+}
