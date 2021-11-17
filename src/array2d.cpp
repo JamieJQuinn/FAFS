@@ -11,7 +11,11 @@ Array::Array(const int nx_in, const int ny_in, const int ng_in, const std::strin
   data(size()),
   hasName{name_in != ""},
   isDeviceDirty{true},
-  range(cl::NDRange(ng, ng), cl::NDRange(nx, ny), cl::NDRange(nx, ny))
+  range(cl::NDRange(ng, ng), cl::NDRange(nx, ny), cl::NDRange(nx, ny)),
+  lowerBRange(cl::NDRange(0,0), cl::NDRange(nx+2*ng, 1), cl::NDRange(nx+2*ng, 1)),
+  upperBRange(cl::NDRange(0,ny+ng), cl::NDRange(nx+2*ng, 1), cl::NDRange(nx+2*ng, 1)),
+  leftBRange(cl::NDRange(0,0), cl::NDRange(1, ny+2*ng), cl::NDRange(1, ny+2*ng)),
+  rightBRange(cl::NDRange(nx+ng,0), cl::NDRange(1, ny+2*ng), cl::NDRange(1, ny+2*ng))
 {
   setName(name_in);
   initialise(initialVal);

@@ -44,6 +44,10 @@ class Array {
 
     const int nx, ny, ng;
     cl::EnqueueArgs range;
+    cl::EnqueueArgs lowerBRange;
+    cl::EnqueueArgs upperBRange;
+    cl::EnqueueArgs leftBRange;
+    cl::EnqueueArgs rightBRange;
   private:
     std::vector<real> data;
     cl::Buffer d_data; // data on device
