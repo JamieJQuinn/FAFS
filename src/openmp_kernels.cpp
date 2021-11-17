@@ -71,6 +71,7 @@ real ddy(const Array& f, const real dy, const int i, const int j) {
 }
 
 void advectImplicit(Array& out, const Array& f, const Array& vx, const Array& vy, const real dx, const real dy, const real dt, const int nx, const int ny, const int ng) {
+#pragma omp parallel for collapse(2)
   for (int i=0; i<out.nx; ++i) {
     for(int j=0; j<out.ny; ++j) {
       out(i,j) = calcAdvection(f, i, j, dx, dy, dt, nx, ny, ng, vx, vy);
@@ -83,6 +84,7 @@ real calcAdvectionTerm(const Array& f, const Array& vx, const Array& vy, const r
 }
 
 void calcAdvectionTerm(Array& out, const Array& f, const Array& vx, const Array& vy, const real dx, const real dy) {
+#pragma omp parallel for collapse(2)
   for(int i=0; i<out.nx; ++i) {
     for(int j=0; j<out.ny; ++j) {
       out(i,j) = calcAdvectionTerm(f, vx, vy, dx, dy, i, j);
@@ -95,6 +97,7 @@ real calcDiffusionTerm(const Array& f, const real dx, const real dy, const int i
 }
 
 void calcDiffusionTerm(Array& out, const Array& f, const real dx, const real dy) {
+#pragma omp parallel for collapse(2)
   for(int i=0; i<out.nx; ++i) {
     for(int j=0; j<out.ny; ++j) {
       out(i,j) = calcDiffusionTerm(f, dx, dy, i, j);
@@ -103,6 +106,7 @@ void calcDiffusionTerm(Array& out, const Array& f, const real dx, const real dy)
 }
 
 void advanceEuler(Array& out, const Array& ddt, const real dt) {
+#pragma omp parallel for collapse(2)
   for(int i=0; i<out.nx; ++i) {
     for(int j=0; j<out.ny; ++j) {
       out(i,j) = out(i,j) + ddt(i,j)*dt;
@@ -111,6 +115,7 @@ void advanceEuler(Array& out, const Array& ddt, const real dt) {
 }
 
 void calcDivergence(Array& out, const Array& fx, const Array& fy, const real dx, const real dy) {
+#pragma omp parallel for collapse(2)
   for(int i=0; i<out.nx; ++i) {
     for(int j=0; j<out.ny; ++j) {
       out(i,j) = (fx(i,j) - fx(i-1,j))/dx + (fy(i,j) - fy(i,j-1))/dy;
@@ -119,6 +124,7 @@ void calcDivergence(Array& out, const Array& fx, const Array& fy, const real dx,
 }
 
 void applyProjectionX(Array& out, const Array& f, const real dx) {
+#pragma omp parallel for collapse(2)
   for(int i=0; i<out.nx; ++i) {
     for(int j=0; j<out.ny; ++j) {
       out(i,j) = out(i,j) - (f(i+1,j)-f(i,j))/dx;
@@ -127,6 +133,7 @@ void applyProjectionX(Array& out, const Array& f, const real dx) {
 }
 
 void applyProjectionY(Array& out, const Array& f, const real dy) {
+#pragma omp parallel for collapse(2)
   for(int i=0; i<out.nx; ++i) {
     for(int j=0; j<out.ny; ++j) {
       out(i,j) = out(i,j) - (f(i,j+1)-f(i,j))/dy;
