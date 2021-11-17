@@ -210,7 +210,7 @@ void runCPU() {
   Array cellTemp1(c.nx+1, c.ny+1, c.ng, "cellTemp1");
   Array cellTemp2(c.nx+1, c.ny+1, c.ng, "cellTemp2");
   // Working array for divergence
-  Array divw(c.nx, c.ny, c.ng, "divw");
+  Array divw(c.nx+1, c.ny+1, c.ng, "divw");
 
   HDFFile icFile("000000.hdf5");
   vars.vx.saveTo(icFile.file);
