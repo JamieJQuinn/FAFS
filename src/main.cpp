@@ -6,7 +6,6 @@
 #include <iostream>
 #include <memory>
 #include <cassert>
-#include <cmath>
 
 #include <array2d.hpp>
 #include <variables.hpp>
