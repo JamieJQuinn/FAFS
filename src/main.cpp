@@ -247,7 +247,7 @@ void runCPU() {
 
     // Diffuse vx
     // Implicit
-    const real initialGuess = 0.0f;
+    real initialGuess = 0.0f;
     boundTemp1.initialise(initialGuess);
     applyVxBC(boundTemp1);
     applyVxBC(boundTemp2);
@@ -259,7 +259,7 @@ void runCPU() {
 
     // Diffuse vy
     // Implicit
-    const real initialGuess = 0.0f;
+    initialGuess = 0.0f;
     boundTemp1.initialise(initialGuess);
     applyVyBC(boundTemp1);
     applyVyBC(boundTemp2);
