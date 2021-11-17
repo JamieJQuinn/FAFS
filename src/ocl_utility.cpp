@@ -63,15 +63,21 @@ auto readFile(std::string_view path) -> std::string {
 
 cl::Program buildProgramFromString(const std::string& source) {
   // Compile kernel source into program
-  int cl_error;
-  cl::Program program(source, true, &cl_error);
+  cl::Program program(source, false);
 
-  if(cl_error != 0) {
-    std::string bl = program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(cl::Device::getDefault());
-    std::cerr << bl << std::endl;
+  try {
+    program.build();
+  } catch (cl::Error& e) {
+    if (e.err() == CL_BUILD_PROGRAM_FAILURE) {
+      // Check the build status
+      cl_build_status status = program.getBuildInfo<CL_PROGRAM_BUILD_STATUS>(cl::Device::getDefault());
 
-    std::string errorMsg = std::string("OpenCL: Could not compile kernel.");
-    throw std::runtime_error(errorMsg);
+      // Get the build log
+      std::string bl = program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(cl::Device::getDefault());
+      std::cerr << bl << std::endl;
+    } else {
+      throw e;
+    }
   }
 
   return program;
