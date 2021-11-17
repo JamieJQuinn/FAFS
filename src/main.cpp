@@ -221,15 +221,15 @@ void runCPU() {
   while (t < c.totalTime) {
     // ADVECTION
     // implicit
-    //advectImplicit(boundTemp1, vars.vx, vars.vx, vars.vy, c.dx, c.dy, c.dt, c.nx, c.ny, c.ng);
-    //advectImplicit(boundTemp2, vars.vy, vars.vx, vars.vy, c.dx, c.dy, c.dt, c.nx, c.ny, c.ng);
-    //vars.vx.swapData(boundTemp1);
-    //vars.vy.swapData(boundTemp2);
+    advectImplicit(boundTemp1, vars.vx, vars.vx, vars.vy, c.dx, c.dy, c.dt, c.nx, c.ny, c.ng);
+    advectImplicit(boundTemp2, vars.vy, vars.vx, vars.vy, c.dx, c.dy, c.dt, c.nx, c.ny, c.ng);
+    vars.vx.swapData(boundTemp1);
+    vars.vy.swapData(boundTemp2);
     // explicit
-    calcAdvectionTerm(boundTemp1, vars.vx, vars.vx, vars.vy, c.dx, c.dy);
-    calcAdvectionTerm(boundTemp2, vars.vy, vars.vx, vars.vy, c.dx, c.dy);
-    advanceEuler(vars.vx, boundTemp1, c.dt);
-    advanceEuler(vars.vy, boundTemp2, c.dt);
+    //calcAdvectionTerm(boundTemp1, vars.vx, vars.vx, vars.vy, c.dx, c.dy);
+    //calcAdvectionTerm(boundTemp2, vars.vy, vars.vx, vars.vy, c.dx, c.dy);
+    //advanceEuler(vars.vx, boundTemp1, c.dt);
+    //advanceEuler(vars.vy, boundTemp2, c.dt);
 
     applyBoundaryConditions(vars);
 
