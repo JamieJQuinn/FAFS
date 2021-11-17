@@ -173,6 +173,14 @@ void advanceEuler(Array& out, const Array& ddt, const real dt) {
   }
 }
 
+void calcDivergence(Array& out, const Array& fx, const Array& fy, const real dx, const real dy) {
+  for(int i=0; i<out.nx; ++i) {
+    for(int j=0; j<out.ny; ++j) {
+      out(i,j) = (fx(i,j) - fx(i-1,j))/dx + (fy(i,j) - fy(i,j-1))/dy;
+    }
+  }
+}
+
 void runCPU() {
   const Constants c;
 
@@ -186,10 +194,6 @@ void runCPU() {
   Array cellTemp1(c.nx+1, c.ny+1, c.ng, "cellTemp1");
   Array cellTemp2(c.nx+1, c.ny+1, c.ng, "cellTemp2");
   Array divw(c.nx, c.ny, c.ng, "divw");
-
-  auto divergenceKernel = [&](Array& f, const int i, const int j) {
-    f(i,j) = (vars.vx(i,j) - vars.vx(i-1,j))/c.dx + (vars.vy(i,j) - vars.vy(i,j-1))/c.dy;
-  };
 
   auto vxProjectKernel = [&](Array& f, const Array& in, const int i, const int j) {
     f(i,j) -= (in(i+1,j)-in(i,j))/c.dx;
@@ -221,22 +225,25 @@ void runCPU() {
     applyBoundaryConditions(vars);
 
     // DIFFUSION
+    real alpha = (c.dx*c.dy)/(c.nu*c.dt);
+    real beta = 4+(c.dx*c.dy)/(c.nu*c.dt);
+
     boundTemp1.initialise(0);
     applyVxBC(boundTemp1);
     applyVxBC(boundTemp2);
-    runJacobiIteration(boundTemp2, boundTemp1, (c.dx*c.dy)/(c.nu*c.dt), 4+(c.dx*c.dy)/(c.nu*c.dt), vars.vx);
+    runJacobiIteration(boundTemp2, boundTemp1, alpha, beta, vars.vx);
     vars.vx.swapData(boundTemp1);
 
     boundTemp1.initialise(0);
     applyVyBC(boundTemp1);
     applyVyBC(boundTemp2);
-    runJacobiIteration(boundTemp2, boundTemp1, (c.dx*c.dy)/(c.nu*c.dt), 4+(c.dx*c.dy)/(c.nu*c.dt), vars.vy);
+    runJacobiIteration(boundTemp2, boundTemp1, alpha, beta, vars.vy);
     vars.vy.swapData(boundTemp1);
 
     applyBoundaryConditions(vars);
 
     // PROJECTION
-    divw.applyKernel(divergenceKernel);
+    calcDivergence(divw, vars.vx, vars.vy, c.dx, c.dy);
     cellTemp1.initialise(0);
     runJacobiIteration(cellTemp2, cellTemp1, -c.dx*c.dy, 4.0f, divw);
     vars.p.swapData(cellTemp1);
