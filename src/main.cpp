@@ -79,7 +79,7 @@ T clamp(const T i, const T upper, const T lower) {
   return std::max(std::min(i, upper), lower);
 }
 
-void calcAdvection(Array& out, const Array& f, const int i, const int j, const real dx, const real dy, const real dt, const int nx, const int ny, const int ng, const Array& vx, const Array& vy) {
+real calcAdvection(const Array& f, const int i, const int j, const real dx, const real dy, const real dt, const int nx, const int ny, const int ng, const Array& vx, const Array& vy) {
   // figure out where the current piece has come from (in index space)
   real x = i - dt*vx(i,j)/dx;
   real y = j - dt*vy(i,j)/dy;
@@ -116,7 +116,7 @@ void calcAdvection(Array& out, const Array& f, const int i, const int j, const r
   } else {
     fAv = fy1;
   }
-  out(i,j) = fAv;
+  return fAv;
 }
 
 real calcJacobiStep(const Array& f, const real alpha, const real beta, const Array& b, const int i, const int j) {
@@ -150,7 +150,7 @@ real ddy(const Array& f, const real dy, const int i, const int j) {
 void advectImplicit(Array& out, const Array& f, const Array& vx, const Array& vy, const real dx, const real dy, const real dt, const int nx, const int ny, const int ng) {
   for (int i=0; i<out.nx; ++i) {
     for(int j=0; j<out.ny; ++j) {
-      calcAdvection(out, f, i, j, dx, dy, dt, nx, ny, ng, vx, vy);
+      out(i,j) = calcAdvection(f, i, j, dx, dy, dt, nx, ny, ng, vx, vy);
     }
   }
 }
