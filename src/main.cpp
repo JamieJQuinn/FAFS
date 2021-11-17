@@ -126,6 +126,7 @@ real calcJacobiStep(const Array& f, const real alpha, const real beta, const Arr
 }
 
 void applyJacobiStep(Array& out, const Array& f, const real alpha, const real beta, const Array& b) {
+#pragma omp parallel for collapse(2)
   for (int i=0; i<out.nx; ++i) {
     for(int j=0; j<out.ny; ++j) {
       out(i,j) = calcJacobiStep(f, alpha, beta, b, i, j);
