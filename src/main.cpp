@@ -242,8 +242,8 @@ void runCPU() {
     applyBoundaryConditions(vars);
 
     // DIFFUSION
-    real alpha = (c.dx*c.dy)/(c.nu*c.dt);
-    real beta = 4+(c.dx*c.dy)/(c.nu*c.dt);
+    real alpha = c.Re*c.dx*c.dy/c.dt;
+    real beta = 4+alpha;
 
     // Diffuse vx
     // Implicit

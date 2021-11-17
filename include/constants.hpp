@@ -15,5 +15,5 @@ class Constants {
     real dt;
     real totalTime;
 
-    real nu; // viscosity
+    real Re; // Reynolds number (in this non-dimensionalisation, equiv to 1/viscosity)
 };
