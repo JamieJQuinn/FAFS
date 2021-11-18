@@ -53,7 +53,7 @@ int runOCL() {
     // TODO - implement explicit kernel
     //calcAdvectionTerm(boundTemp1, vars.vx, vars.vx, vars.vy, c.dx, c.dy);
     //calcAdvectionTerm(boundTemp2, vars.vy, vars.vx, vars.vy, c.dx, c.dy);
-    // TODO - implement euler kernel
+    // DONE - implement euler kernel
     //advanceEuler(vars.vx, boundTemp1, c.dt);
     //advanceEuler(vars.vy, boundTemp2, c.dt);
 
