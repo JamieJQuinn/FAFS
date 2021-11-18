@@ -50,7 +50,7 @@ int runOCL() {
     //vars.vx.swapData(boundTemp1);
     //vars.vy.swapData(boundTemp2);
     // explicit
-    // TODO - implement explicit kernel
+    // DONE - implement explicit kernel
     //calcAdvectionTerm(boundTemp1, vars.vx, vars.vx, vars.vy, c.dx, c.dy);
     //calcAdvectionTerm(boundTemp2, vars.vy, vars.vx, vars.vy, c.dx, c.dy);
     // DONE - implement euler kernel
@@ -75,7 +75,7 @@ int runOCL() {
     //runJacobiIteration(boundTemp2, boundTemp1, alpha, beta, vars.vx);
     //vars.vx.swapData(boundTemp1);
     // Explicit
-    // TODO implement explicit diffusion kernel
+    // DONE implement explicit diffusion kernel
     //calcDiffusionTerm(boundTemp1, vars.vx, c.dx, c.dy);
     //advanceEuler(vars.vx, boundTemp1, c.dt);
 
