@@ -3,8 +3,8 @@
 openCLArray::openCLArray(const int nx, const int ny, const int ng, const std::string& name, real initialVal, bool initDevice):
   Array(nx, ny, ng, name, initialVal),
   isDeviceDirty{true},
-  range(cl::NDRange(ng, ng), cl::NDRange(nx, ny), cl::NDRange(nx, ny)),
-  entireRange(cl::NDRange(0, 0), cl::NDRange(nx+2*ng, ny+2*ng), cl::NDRange(nx+2*ng, ny+2*ng)),
+  interior(makeRange(0, nx, 0, ny)),
+  entire(makeRange(-1, nx+1, -1, ny+1)),
   lowerBRange(cl::NDRange(0,0), cl::NDRange(nx+2*ng, 1), cl::NDRange(nx+2*ng, 1)),
   upperBRange(cl::NDRange(0,ny+ng), cl::NDRange(nx+2*ng, 1), cl::NDRange(nx+2*ng, 1)),
   leftBRange(cl::NDRange(0,0), cl::NDRange(1, ny+2*ng), cl::NDRange(1, ny+2*ng)),
@@ -43,4 +43,10 @@ void openCLArray::toDevice() {
 void openCLArray::toHost() {
   cl::copy(d_data, begin(), end());
   isDeviceDirty = false;
+}
+
+const cl::EnqueueArgs openCLArray::makeRange(int x0, int x1, int y0, int y1) const {
+  int xGroup = x1-x0;
+  int yGroup = y1-y0;
+  return cl::EnqueueArgs(cl::NDRange(x0+ng, y0+ng), cl::NDRange(x1-x0, y1-y0), cl::NDRange(xGroup, yGroup));
 }

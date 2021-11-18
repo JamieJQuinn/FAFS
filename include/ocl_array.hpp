@@ -12,13 +12,13 @@ class openCLArray: public Array {
     std::vector<real>::iterator end();
     const cl::Buffer& getDeviceData() const;
     cl::Buffer& getDeviceData();
-    //const cl::EnqueueArgs& makeRange() const;
+    const cl::EnqueueArgs makeRange(int x0, int x1, int y0, int y1) const;
 
     void toDevice();
     void toHost();
 
-    cl::EnqueueArgs range;
-    cl::EnqueueArgs entireRange;
+    cl::EnqueueArgs interior;
+    cl::EnqueueArgs entire;
     cl::EnqueueArgs lowerBRange;
     cl::EnqueueArgs upperBRange;
     cl::EnqueueArgs leftBRange;

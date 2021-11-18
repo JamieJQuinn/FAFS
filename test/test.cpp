@@ -15,7 +15,7 @@ TEST_CASE( "Test filling array with value", "[ocl]" ) {
 
   Kernels kernels;
 
-  kernels.fill(arr.range, arr.getDeviceData(), 1.0f, arr.nx, arr.ny, arr.ng);
+  kernels.fill(arr.interior, arr.getDeviceData(), 1.0f, arr.nx, arr.ny, arr.ng);
 
   arr.toHost();
 
@@ -50,8 +50,12 @@ TEST_CASE( "Test applying Dirichlet boundary conditions on device", "[boundary, 
 
   Kernels kernels;
 
-  kernels.fill(arr.range, arr.getDeviceData(), 1.0f, arr.nx, arr.ny, arr.ng);
-  kernels.fill(arr.lowerBRange, arr.getDeviceData(), 2.0f, arr.nx, arr.ny, arr.ng);
+  kernels.fill(arr.interior, arr.getDeviceData(), 1.0f, arr.nx, arr.ny, arr.ng);
+  try {
+    kernels.fill(arr.lowerBRange, arr.getDeviceData(), 2.0f, arr.nx, arr.ny, arr.ng);
+  } catch (cl::Error& e) {
+    std::cout << e.what() << ", " << e.err() << std::endl;
+  }
   kernels.fill(arr.upperBRange, arr.getDeviceData(), 3.0f, arr.nx, arr.ny, arr.ng);
   kernels.fill(arr.leftBRange, arr.getDeviceData(), 4.0f, arr.nx, arr.ny, arr.ng);
   kernels.fill(arr.rightBRange, arr.getDeviceData(), 5.0f, arr.nx, arr.ny, arr.ng);
@@ -91,7 +95,7 @@ TEST_CASE( "Test applying von Neumann boundary conditions on device", "[boundary
 
   Kernels kernels;
 
-  kernels.fill(arr.range, arr.getDeviceData(), 1.0f, arr.nx, arr.ny, arr.ng);
+  kernels.fill(arr.interior, arr.getDeviceData(), 1.0f, arr.nx, arr.ny, arr.ng);
   kernels.applyVonNeumannBC_y(arr.lowerBRange, arr.getDeviceData(), arr.nx, arr.ny, arr.ng);
   kernels.applyVonNeumannBC_x(arr.leftBRange, arr.getDeviceData(), arr.nx, arr.ny, arr.ng);
 
@@ -134,9 +138,9 @@ TEST_CASE( "Test Euler method", "[ocl]" ) {
 
   Kernels kernels;
 
-  kernels.fill(arr.range, arr.getDeviceData(), 1.0f, arr.nx, arr.ny, arr.ng);
-  kernels.fill(ddt.range, ddt.getDeviceData(), 1.0f, ddt.nx, ddt.ny, ddt.ng);
-  kernels.advanceEuler(arr.range, arr.getDeviceData(), ddt.getDeviceData(), dt, arr.nx, arr.ny, arr.ng);
+  kernels.fill(arr.interior, arr.getDeviceData(), 1.0f, arr.nx, arr.ny, arr.ng);
+  kernels.fill(ddt.interior, ddt.getDeviceData(), 1.0f, ddt.nx, ddt.ny, ddt.ng);
+  kernels.advanceEuler(arr.interior, arr.getDeviceData(), ddt.getDeviceData(), dt, arr.nx, arr.ny, arr.ng);
 
   arr.toHost();
 
@@ -170,8 +174,8 @@ TEST_CASE( "Test calculating diffusion term", "[ocl") {
 
   Kernels kernels;
 
-  kernels.fill(arr.entireRange, arr.getDeviceData(), 1.0f, arr.nx, arr.ny, arr.ng);
-  kernels.calcDiffusionTerm(res.range, res.getDeviceData(), arr.getDeviceData(), 1.0f, 1.0f, res.nx, res.ny, res.ng);
+  kernels.fill(arr.entire, arr.getDeviceData(), 1.0f, arr.nx, arr.ny, arr.ng);
+  kernels.calcDiffusionTerm(res.interior, res.getDeviceData(), arr.getDeviceData(), 1.0f, 1.0f, res.nx, res.ny, res.ng);
 
   res.toHost();
 
@@ -199,10 +203,10 @@ TEST_CASE( "Test calculating advection term", "[ocl") {
 
   Kernels kernels;
 
-  kernels.fill(arr.entireRange, arr.getDeviceData(), 1.0f, arr.nx, arr.ny, arr.ng);
-  kernels.fill(vx.entireRange, vx.getDeviceData(), 1.0f, vx.nx, vx.ny, vx.ng);
-  kernels.fill(vy.entireRange, vy.getDeviceData(), 1.0f, vy.nx, vy.ny, vy.ng);
-  kernels.calcAdvectionTerm(res.range, res.getDeviceData(), arr.getDeviceData(), vx.getDeviceData(), vy.getDeviceData(), 1.0f, 1.0f, res.nx, res.ny, res.ng);
+  kernels.fill(arr.entire, arr.getDeviceData(), 1.0f, arr.nx, arr.ny, arr.ng);
+  kernels.fill(vx.entire, vx.getDeviceData(), 1.0f, vx.nx, vx.ny, vx.ng);
+  kernels.fill(vy.entire, vy.getDeviceData(), 1.0f, vy.nx, vy.ny, vy.ng);
+  kernels.calcAdvectionTerm(res.interior, res.getDeviceData(), arr.getDeviceData(), vx.getDeviceData(), vy.getDeviceData(), 1.0f, 1.0f, res.nx, res.ny, res.ng);
 
   res.toHost();
 
