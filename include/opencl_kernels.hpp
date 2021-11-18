@@ -3,6 +3,7 @@
 #include <precision.hpp>
 
 typedef cl::KernelFunctor<cl::Buffer, real, int, int, int> fillKernel;
+typedef cl::KernelFunctor<cl::Buffer, cl::Buffer, real, int, int, int> advanceEulerKernel;
 typedef cl::KernelFunctor<cl::Buffer, int, int, int> vonNeumannKernel;
 
 std::string FAFS_PROGRAM{R"CLC(
@@ -65,5 +66,20 @@ __kernel void applyVonNeumannBC_x(
   i_boundary = gid(nx+ng, j, nx, ny, ng);
   i_interior = gid(nx, j, nx, ny, ng);
   out[i_boundary] = out[i_interior];
+}
+
+__kernel void advanceEuler(
+  __global real *out,
+  __global const real *ddt,
+  __private const real dt,
+  __private const int nx,
+  __private const int ny,
+  __private const int ng
+)
+{
+  int i = get_global_id(0);
+  int j = get_global_id(1);
+  int idx = gid(i, j, nx, ny, ng);
+  out[idx] += ddt[idx]*dt;
 }
 )CLC"};
