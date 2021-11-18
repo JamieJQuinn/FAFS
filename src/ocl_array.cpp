@@ -9,9 +9,7 @@ openCLArray::openCLArray(const int nx, const int ny, const int ng, const std::st
   lowerBound(makeRowRange(-1, true)),
   upperBound(makeRowRange(ny, true)),
   leftBound(makeColumnRange(-1, true)),
-  rightBound(makeColumnRange(nx, true)),
-  program{buildProgramFromString(FAFS_PROGRAM)},
-  fill_k{createKernelFunctor<fillKernel>(program, "fill")}
+  rightBound(makeColumnRange(nx, true))
 {
   if(initDevice) {
     initOnDevice();
@@ -83,5 +81,5 @@ void openCLArray::swapData(openCLArray& arr) {
 
 void openCLArray::fill(real val, bool includeGhost) {
   auto range = includeGhost ? entire : interior;
-  fill_k(range, getDeviceData(), val, nx, ny, ng);
+  g_kernels.fill(range, getDeviceData(), val, nx, ny, ng);
 }

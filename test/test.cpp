@@ -13,8 +13,6 @@ TEST_CASE( "Test filling array with value", "[ocl]" ) {
 
   arr.initOnDevice();
 
-  Kernels kernels;
-
   arr.fill(1.0f);
 
   arr.toHost();
@@ -48,13 +46,11 @@ TEST_CASE( "Test applying Dirichlet boundary conditions on device", "[boundary, 
 
   arr.initOnDevice();
 
-  Kernels kernels;
-
   arr.fill(1.0f);
-  kernels.fill(arr.lowerBound, arr.getDeviceData(), 2.0f, arr.nx, arr.ny, arr.ng);
-  kernels.fill(arr.upperBound, arr.getDeviceData(), 3.0f, arr.nx, arr.ny, arr.ng);
-  kernels.fill(arr.leftBound, arr.getDeviceData(), 4.0f, arr.nx, arr.ny, arr.ng);
-  kernels.fill(arr.rightBound, arr.getDeviceData(), 5.0f, arr.nx, arr.ny, arr.ng);
+  g_kernels.fill(arr.lowerBound, arr.getDeviceData(), 2.0f, arr.nx, arr.ny, arr.ng);
+  g_kernels.fill(arr.upperBound, arr.getDeviceData(), 3.0f, arr.nx, arr.ny, arr.ng);
+  g_kernels.fill(arr.leftBound, arr.getDeviceData(), 4.0f, arr.nx, arr.ny, arr.ng);
+  g_kernels.fill(arr.rightBound, arr.getDeviceData(), 5.0f, arr.nx, arr.ny, arr.ng);
   arr.toHost();
 
   for(int i=0; i<nx; ++i) {
@@ -89,11 +85,9 @@ TEST_CASE( "Test applying von Neumann boundary conditions on device", "[boundary
 
   arr.initOnDevice();
 
-  Kernels kernels;
-
   arr.fill(1.0f);
-  kernels.applyVonNeumannBC_y(arr.lowerBound, arr.getDeviceData(), arr.nx, arr.ny, arr.ng);
-  kernels.applyVonNeumannBC_x(arr.leftBound, arr.getDeviceData(), arr.nx, arr.ny, arr.ng);
+  g_kernels.applyVonNeumannBC_y(arr.lowerBound, arr.getDeviceData(), arr.nx, arr.ny, arr.ng);
+  g_kernels.applyVonNeumannBC_x(arr.leftBound, arr.getDeviceData(), arr.nx, arr.ny, arr.ng);
 
   arr.toHost();
 
@@ -132,11 +126,9 @@ TEST_CASE( "Test Euler method", "[ocl]" ) {
   arr.initOnDevice();
   ddt.initOnDevice();
 
-  Kernels kernels;
-
   arr.fill(1.0f);
   ddt.fill(1.0f);
-  kernels.advanceEuler(arr.interior, arr.getDeviceData(), ddt.getDeviceData(), dt, arr.nx, arr.ny, arr.ng);
+  g_kernels.advanceEuler(arr.interior, arr.getDeviceData(), ddt.getDeviceData(), dt, arr.nx, arr.ny, arr.ng);
 
   arr.toHost();
 
@@ -168,10 +160,8 @@ TEST_CASE( "Test calculating diffusion term", "[ocl") {
   arr.initOnDevice();
   res.initOnDevice();
 
-  Kernels kernels;
-
   arr.fill(1.0f, true);
-  kernels.calcDiffusionTerm(res.interior, res.getDeviceData(), arr.getDeviceData(), 1.0f, 1.0f, res.nx, res.ny, res.ng);
+  g_kernels.calcDiffusionTerm(res.interior, res.getDeviceData(), arr.getDeviceData(), 1.0f, 1.0f, res.nx, res.ny, res.ng);
 
   res.toHost();
 
@@ -197,12 +187,10 @@ TEST_CASE( "Test calculating advection term", "[ocl") {
   vy.initOnDevice();
   res.initOnDevice();
 
-  Kernels kernels;
-
   arr.fill(1.0f, true);
   vx.fill(1.0f, true);
   vy.fill(1.0f, true);
-  kernels.calcAdvectionTerm(res.interior, res.getDeviceData(), arr.getDeviceData(), vx.getDeviceData(), vy.getDeviceData(), 1.0f, 1.0f, res.nx, res.ny, res.ng);
+  g_kernels.calcAdvectionTerm(res.interior, res.getDeviceData(), arr.getDeviceData(), vx.getDeviceData(), vy.getDeviceData(), 1.0f, 1.0f, res.nx, res.ny, res.ng);
 
   res.toHost();
 

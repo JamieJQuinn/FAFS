@@ -141,3 +141,5 @@ __kernel void calcDiffusionTerm(
   out[ij] = (f[ijp] + f[ijm] + f[ipj] + f[imj] - 4*f[ij])/(dx*dy);
 }
 )CLC"};
+
+Kernels g_kernels; // wuh oh, is that a global variable? it is, deal with it

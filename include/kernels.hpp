@@ -33,6 +33,8 @@ class Kernels {
 
 extern const std::string FAFS_PROGRAM;
 
+extern Kernels g_kernels;
+
 template<class T>
 T createKernelFunctor(const cl::Program& program, const std::string& kernelName) {
   cl::Kernel kernel;

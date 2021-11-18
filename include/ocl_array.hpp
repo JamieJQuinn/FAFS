@@ -32,6 +32,4 @@ class openCLArray: public Array {
   protected:
     cl::Buffer d_data; // data on device
     bool isDeviceDirty;
-    cl::Program program;
-    fillKernel fill_k;
 };
