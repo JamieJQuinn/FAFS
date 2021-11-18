@@ -20,7 +20,9 @@ typedef cl::KernelFunctor<cl::Buffer, int, int, int> vonNeumannKernel;
 class Kernels {
   public:
     Kernels();
-    cl::Program program;
+  protected:
+    cl::Program program; // This must be initialised before kernels
+  public:
     fillKernel fill;
     vonNeumannKernel applyVonNeumannBC_x;
     vonNeumannKernel applyVonNeumannBC_y;
@@ -37,7 +39,7 @@ T createKernelFunctor(const cl::Program& program, const std::string& kernelName)
   try {
     kernel = cl::Kernel(program, kernelName.c_str());
   } catch (cl::Error& e) {
-    std::cout << e.what() << std::endl;
+    std::cout << e.what() << ", " << e.err() << std::endl;
   }
   return T(kernel);
 }

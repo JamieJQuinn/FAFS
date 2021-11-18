@@ -4,6 +4,10 @@
 #include <array2d.hpp>
 #include <precision.hpp>
 
+typedef cl::KernelFunctor<cl::Buffer, real, int, int, int> fillKernel;
+
+extern const std::string ARRAY_PROGRAM;
+
 class openCLArray: public Array {
   public:
     openCLArray(const int nx, const int ny, const int ng = 0, const std::string& name = "", real initialVal = 0.0f, bool initDevice = true);
@@ -15,6 +19,8 @@ class openCLArray: public Array {
     const cl::EnqueueArgs makeRange(int x0, int x1, int y0, int y1) const;
     const cl::EnqueueArgs makeColumnRange(int col, bool includeGhost=false) const;
     const cl::EnqueueArgs makeRowRange(int row, bool includeGhost=false) const;
+    void swapData(openCLArray& arr);
+    void fill(real val, bool includeGhost = false);
 
     void toDevice();
     void toHost();
@@ -29,4 +35,6 @@ class openCLArray: public Array {
   protected:
     cl::Buffer d_data; // data on device
     bool isDeviceDirty;
+    cl::Program program;
+    fillKernel fill_k;
 };
