@@ -156,3 +156,59 @@ TEST_CASE( "Test Euler method", "[ocl]" ) {
     REQUIRE(arr(nx,j) == 0.0f);
   }
 }
+
+TEST_CASE( "Test calculating diffusion term", "[ocl") {
+  const int nx = 16;
+  const int ny = 16;
+  const int ng = 1;
+
+  Array arr(nx, ny, ng);
+  Array res(nx, ny, ng);
+
+  arr.initOnDevice();
+  res.initOnDevice();
+
+  Kernels kernels;
+
+  kernels.fill(arr.entireRange, arr.getDeviceData(), 1.0f, arr.nx, arr.ny, arr.ng);
+  kernels.calcDiffusionTerm(res.range, res.getDeviceData(), arr.getDeviceData(), 1.0f, 1.0f, res.nx, res.ny, res.ng);
+
+  res.toHost();
+
+  for(int i=0; i<nx; ++i) {
+    for(int j=0; j<nx; ++j) {
+      REQUIRE(res(i,j) == 0.0f);
+    }
+  }
+}
+
+TEST_CASE( "Test calculating advection term", "[ocl") {
+  const int nx = 16;
+  const int ny = 16;
+  const int ng = 1;
+
+  Array arr(nx, ny, ng);
+  Array vx(nx, ny, ng);
+  Array vy(nx, ny, ng);
+  Array res(nx, ny, ng);
+
+  arr.initOnDevice();
+  vx.initOnDevice();
+  vy.initOnDevice();
+  res.initOnDevice();
+
+  Kernels kernels;
+
+  kernels.fill(arr.entireRange, arr.getDeviceData(), 1.0f, arr.nx, arr.ny, arr.ng);
+  kernels.fill(vx.entireRange, vx.getDeviceData(), 1.0f, vx.nx, vx.ny, vx.ng);
+  kernels.fill(vy.entireRange, vy.getDeviceData(), 1.0f, vy.nx, vy.ny, vy.ng);
+  kernels.calcAdvectionTerm(res.range, res.getDeviceData(), arr.getDeviceData(), vx.getDeviceData(), vy.getDeviceData(), 1.0f, 1.0f, res.nx, res.ny, res.ng);
+
+  res.toHost();
+
+  for(int i=0; i<nx; ++i) {
+    for(int j=0; j<nx; ++j) {
+      REQUIRE(res(i,j) == 0.0f);
+    }
+  }
+}

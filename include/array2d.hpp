@@ -44,6 +44,7 @@ class Array {
 
     const int nx, ny, ng;
     cl::EnqueueArgs range;
+    cl::EnqueueArgs entireRange;
     cl::EnqueueArgs lowerBRange;
     cl::EnqueueArgs upperBRange;
     cl::EnqueueArgs leftBRange;
