@@ -24,6 +24,7 @@ int runOCL() {
   setInitialConditions(vars);
   // applyBoundaryConditions(vars); TODO wrap boundary conditions
 
+  Kernels kernels;
 
   // TODO - put working arrays on device
   // Working arrays located at boundaries
@@ -46,7 +47,7 @@ int runOCL() {
     // implicit
     //advectImplicit(boundTemp1, vars.vx, vars.vx, vars.vy, c.dx, c.dy, c.dt, c.nx, c.ny, c.ng);
     //advectImplicit(boundTemp2, vars.vy, vars.vx, vars.vy, c.dx, c.dy, c.dt, c.nx, c.ny, c.ng);
-    // TODO - implement swap of device pointers
+    // DONE - implement swap of device pointers
     //vars.vx.swapData(boundTemp1);
     //vars.vy.swapData(boundTemp2);
     // explicit
@@ -65,8 +66,8 @@ int runOCL() {
 
     // Diffuse vx
     // Implicit
-    // TODO switch to fill kernel
-    //real initialGuess = 0.0f;
+    // Done switch to fill kernel
+    boundTemp1.fill(0.0f);
     //boundTemp1.initialise(initialGuess);
     // TODO wrap these
     //applyVxBC(boundTemp1);
