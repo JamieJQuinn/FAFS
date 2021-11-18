@@ -7,8 +7,8 @@
 
 // Procedure for adding a kernel:
 // 1. add opencl kernel code to FAFS_PROGRAM in src/kernels.cpp
-// 2. define kernel type below
-// 3. add kernel to Kernels class definition below
+// 2. typedef kernel below
+// 3. add kernel object to Kernels class definition below
 // 4. add kernel construction to Kernels constructor in src/kernels.cpp
 
 typedef cl::KernelFunctor<cl::Buffer, real, int, int, int> fillKernel;
