@@ -93,3 +93,12 @@ void Array::swap(Array& arr) {
 void Array::swapData(Array& arr) {
   std::swap(data, arr.data);
 }
+
+void Array::print() const {
+  for(int i=0; i<nx; ++i) {
+    for(int j=0; j<nx; ++j) {
+      std::cout << (*this)(i,j) << ", ";
+    }
+    std::cout << std::endl;
+  }
+}

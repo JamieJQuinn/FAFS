@@ -192,24 +192,36 @@ TEST_CASE( "Test Jacobi iteration", "[ocl]") {
 
   const real dx = 1.0f/(nx-1);
   const real dy = 1.0f/(ny-1);
+  const real dt = 0.01f;
+  const real Re = 10.0f;
 
-  OpenCLArray res(nx, ny, ng);
+  OpenCLArray resImplicit(nx, ny, ng);
   OpenCLArray temp1(nx, ny, ng);
   OpenCLArray temp2(nx, ny, ng);
-  OpenCLArray b(nx, ny, ng);
 
-  res.fill(1.0f, true);
+  resImplicit.fill(1.0f, true);
+  temp1.fill(1.0f, true);
+  temp2.fill(1.0f, true);
+
+  const real alpha = Re*dx*dy/dt;
+  const real beta = 4.0f+alpha;
+  runJacobiIteration(resImplicit, temp1, temp2, alpha, beta, resImplicit);
+
+  resImplicit.toHost();
+
+  OpenCLArray resExplicit(nx, ny, ng);
+
+  resExplicit.fill(1.0f, true);
   temp1.fill(0.0f, true);
-  temp2.fill(0.0f, true);
-  b.fill(0.0f, true);
 
-  runJacobiIteration(temp2, temp1, -dx*dy, 4.0f, b);
+  calcDiffusionTerm(temp1, resExplicit, dx, dy, Re);
+  advanceEuler(resExplicit, temp1, dt);
 
-  res.toHost();
+  resExplicit.toHost();
 
-  //for(int i=0; i<nx; ++i) {
-    //for(int j=0; j<nx; ++j) {
-      //REQUIRE(res(i,j) == 0.0f);
-    //}
-  //}
+  for(int i=0; i<nx; ++i) {
+    for(int j=0; j<nx; ++j) {
+      REQUIRE(resImplicit(i,j) == resExplicit(i,j));
+    }
+  }
 }

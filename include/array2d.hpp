@@ -23,6 +23,7 @@ class Array {
     void setName(const std::string& name);
     void swap(Array& arr);
     void swapData(Array& arr);
+    void print() const;
 
     const int nx, ny, ng;
   protected:

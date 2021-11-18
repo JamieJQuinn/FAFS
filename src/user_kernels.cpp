@@ -1,10 +1,11 @@
 #include <ocl_array.hpp>
 
-void runJacobiIteration(OpenCLArray& out, OpenCLArray& in, const real alpha, const real beta, const OpenCLArray& b, const int iterations) {
+void runJacobiIteration(OpenCLArray& out, OpenCLArray& initialGuess, OpenCLArray& temp, const real alpha, const real beta, const OpenCLArray& b, const int iterations) {
   for(int i=0; i<iterations; ++i) {
-    g_kernels.applyJacobiStep(out.interior, out.getDeviceData(), in.getDeviceData(), alpha, beta, b.getDeviceData(), out.nx, out.ny, out.ng);
-    in.swap(out);
+    g_kernels.applyJacobiStep(temp.interior, temp.getDeviceData(), initialGuess.getDeviceData(), alpha, beta, b.getDeviceData(), temp.nx, temp.ny, temp.ng);
+    initialGuess.swap(temp);
   }
+  out.swapData(initialGuess);
 }
 
 void calcDiffusionTerm(OpenCLArray& out, const OpenCLArray& f, const real dx, const real dy, const real Re) {
