@@ -9,26 +9,15 @@ Array::Array(const int nx_in, const int ny_in, const int ng_in, const std::strin
   ny{ny_in},
   ng{ng_in},
   data(size()),
-  hasName{name_in != ""},
-  isDeviceDirty{true},
-  range(cl::NDRange(ng, ng), cl::NDRange(nx, ny), cl::NDRange(nx, ny)),
-  entireRange(cl::NDRange(0, 0), cl::NDRange(nx+2*ng, ny+2*ng), cl::NDRange(nx+2*ng, ny+2*ng)),
-  lowerBRange(cl::NDRange(0,0), cl::NDRange(nx+2*ng, 1), cl::NDRange(nx+2*ng, 1)),
-  upperBRange(cl::NDRange(0,ny+ng), cl::NDRange(nx+2*ng, 1), cl::NDRange(nx+2*ng, 1)),
-  leftBRange(cl::NDRange(0,0), cl::NDRange(1, ny+2*ng), cl::NDRange(1, ny+2*ng)),
-  rightBRange(cl::NDRange(nx+ng,0), cl::NDRange(1, ny+2*ng), cl::NDRange(1, ny+2*ng))
+  hasName{name_in != ""}
 {
   setName(name_in);
-  initialise(initialVal);
+  fill(initialVal);
 }
 
-void Array::initOnDevice(bool readOnly) {
-  d_data = cl::Buffer(begin(), end(), readOnly);
-}
-
-void Array::initialise(real initialVal) {
+void Array::fill(real val) {
   for (int i=0; i<size(); ++i) {
-    data[i] = initialVal;
+    data[i] = val;
   }
 }
 
@@ -103,30 +92,4 @@ void Array::swap(Array& arr) {
 
 void Array::swapData(Array& arr) {
   std::swap(data, arr.data);
-}
-
-std::vector<real>::iterator Array::begin() {
-  return data.begin();
-}
-
-std::vector<real>::iterator Array::end() {
-  isDeviceDirty = true;
-  return data.end();
-}
-
-const cl::Buffer& Array::getDeviceData() const {
-  return d_data;
-}
-
-cl::Buffer& Array::getDeviceData() {
-  return d_data;
-}
-
-void Array::toDevice() {
-  cl::copy(begin(), end(), d_data);
-}
-
-void Array::toHost() {
-  cl::copy(d_data, begin(), end());
-  isDeviceDirty = false;
 }

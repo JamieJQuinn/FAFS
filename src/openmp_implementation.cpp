@@ -99,7 +99,7 @@ void runCPU() {
     // Diffuse vx
     // Implicit
     real initialGuess = 0.0f;
-    boundTemp1.initialise(initialGuess);
+    boundTemp1.fill(initialGuess);
     applyVxBC(boundTemp1);
     applyVxBC(boundTemp2);
     runJacobiIteration(boundTemp2, boundTemp1, alpha, beta, vars.vx);
@@ -111,7 +111,7 @@ void runCPU() {
     // Diffuse vy
     // Implicit
     initialGuess = 0.0f;
-    boundTemp1.initialise(initialGuess);
+    boundTemp1.fill(initialGuess);
     applyVyBC(boundTemp1);
     applyVyBC(boundTemp2);
     runJacobiIteration(boundTemp2, boundTemp1, alpha, beta, vars.vy);
@@ -126,7 +126,7 @@ void runCPU() {
     // Calculate divergence
     calcDivergence(divw, vars.vx, vars.vy, c.dx, c.dy);
     // Solve Poisson eq for pressure $\nabla^2 p = - \nabla \cdot v$
-    cellTemp1.initialise(0);
+    cellTemp1.fill(0);
     runJacobiIteration(cellTemp2, cellTemp1, -c.dx*c.dy, 4.0f, divw);
     vars.p.swapData(cellTemp1);
     applyVonNeumannBC(vars.p);

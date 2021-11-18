@@ -1,7 +1,7 @@
 #include <iostream>
 #include <catch2/catch_test_macros.hpp>
 #include <ocl_utility.hpp>
-#include <array2d.hpp>
+#include <ocl_array.hpp>
 #include <kernels.hpp>
 
 TEST_CASE( "Test filling array with value", "[ocl]" ) {
@@ -9,7 +9,7 @@ TEST_CASE( "Test filling array with value", "[ocl]" ) {
   const int ny = 16;
   const int ng = 1;
 
-  Array arr(nx, ny, ng);
+  openCLArray arr(nx, ny, ng);
 
   arr.initOnDevice();
 
@@ -44,7 +44,7 @@ TEST_CASE( "Test applying Dirichlet boundary conditions on device", "[boundary, 
   const int ny = 16;
   const int ng = 1;
 
-  Array arr(nx, ny, ng);
+  openCLArray arr(nx, ny, ng);
 
   arr.initOnDevice();
 
@@ -85,7 +85,7 @@ TEST_CASE( "Test applying von Neumann boundary conditions on device", "[boundary
   const int ny = 16;
   const int ng = 1;
 
-  Array arr(nx, ny, ng);
+  openCLArray arr(nx, ny, ng);
 
   arr.initOnDevice();
 
@@ -126,8 +126,8 @@ TEST_CASE( "Test Euler method", "[ocl]" ) {
   const int ng = 1;
   const real dt = 1.0f;
 
-  Array arr(nx, ny, ng);
-  Array ddt(nx, ny, ng);
+  openCLArray arr(nx, ny, ng);
+  openCLArray ddt(nx, ny, ng);
 
   arr.initOnDevice();
   ddt.initOnDevice();
@@ -162,8 +162,8 @@ TEST_CASE( "Test calculating diffusion term", "[ocl") {
   const int ny = 16;
   const int ng = 1;
 
-  Array arr(nx, ny, ng);
-  Array res(nx, ny, ng);
+  openCLArray arr(nx, ny, ng);
+  openCLArray res(nx, ny, ng);
 
   arr.initOnDevice();
   res.initOnDevice();
@@ -187,10 +187,10 @@ TEST_CASE( "Test calculating advection term", "[ocl") {
   const int ny = 16;
   const int ng = 1;
 
-  Array arr(nx, ny, ng);
-  Array vx(nx, ny, ng);
-  Array vy(nx, ny, ng);
-  Array res(nx, ny, ng);
+  openCLArray arr(nx, ny, ng);
+  openCLArray vx(nx, ny, ng);
+  openCLArray vy(nx, ny, ng);
+  openCLArray res(nx, ny, ng);
 
   arr.initOnDevice();
   vx.initOnDevice();
