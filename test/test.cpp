@@ -9,7 +9,7 @@ TEST_CASE( "Test filling array with value", "[ocl]" ) {
   const int ny = 16;
   const int ng = 1;
 
-  openCLArray arr(nx, ny, ng);
+  OpenCLArray arr(nx, ny, ng);
 
   arr.initOnDevice();
 
@@ -42,7 +42,7 @@ TEST_CASE( "Test applying Dirichlet boundary conditions on device", "[boundary, 
   const int ny = 16;
   const int ng = 1;
 
-  openCLArray arr(nx, ny, ng);
+  OpenCLArray arr(nx, ny, ng);
 
   arr.initOnDevice();
 
@@ -81,7 +81,7 @@ TEST_CASE( "Test applying von Neumann boundary conditions on device", "[boundary
   const int ny = 16;
   const int ng = 1;
 
-  openCLArray arr(nx, ny, ng);
+  OpenCLArray arr(nx, ny, ng);
 
   arr.initOnDevice();
 
@@ -120,8 +120,8 @@ TEST_CASE( "Test Euler method", "[ocl]" ) {
   const int ng = 1;
   const real dt = 1.0f;
 
-  openCLArray arr(nx, ny, ng);
-  openCLArray ddt(nx, ny, ng);
+  OpenCLArray arr(nx, ny, ng);
+  OpenCLArray ddt(nx, ny, ng);
 
   arr.initOnDevice();
   ddt.initOnDevice();
@@ -154,8 +154,8 @@ TEST_CASE( "Test calculating diffusion term", "[ocl") {
   const int ny = 16;
   const int ng = 1;
 
-  openCLArray arr(nx, ny, ng);
-  openCLArray res(nx, ny, ng);
+  OpenCLArray arr(nx, ny, ng);
+  OpenCLArray res(nx, ny, ng);
 
   arr.initOnDevice();
   res.initOnDevice();
@@ -177,10 +177,10 @@ TEST_CASE( "Test calculating advection term", "[ocl") {
   const int ny = 16;
   const int ng = 1;
 
-  openCLArray arr(nx, ny, ng);
-  openCLArray vx(nx, ny, ng);
-  openCLArray vy(nx, ny, ng);
-  openCLArray res(nx, ny, ng);
+  OpenCLArray arr(nx, ny, ng);
+  OpenCLArray vx(nx, ny, ng);
+  OpenCLArray vy(nx, ny, ng);
+  OpenCLArray res(nx, ny, ng);
 
   arr.initOnDevice();
   vx.initOnDevice();

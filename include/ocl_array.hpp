@@ -5,9 +5,9 @@
 #include <precision.hpp>
 #include <kernels.hpp>
 
-class openCLArray: public Array {
+class OpenCLArray: public Array {
   public:
-    openCLArray(const int nx, const int ny, const int ng = 0, const std::string& name = "", real initialVal = 0.0f, bool initDevice = true);
+    OpenCLArray(const int nx, const int ny, const int ng = 0, const std::string& name = "", real initialVal = 0.0f, bool initDevice = true);
     void initOnDevice(bool readOnly = false);
     std::vector<real>::iterator begin();
     std::vector<real>::iterator end();
@@ -16,7 +16,7 @@ class openCLArray: public Array {
     const cl::EnqueueArgs makeRange(int x0, int x1, int y0, int y1) const;
     const cl::EnqueueArgs makeColumnRange(int col, bool includeGhost=false) const;
     const cl::EnqueueArgs makeRowRange(int row, bool includeGhost=false) const;
-    void swapData(openCLArray& arr);
+    void swapData(OpenCLArray& arr);
     void fill(real val, bool includeGhost = false);
     void setUpperBoundary(real val);
     void setLowerBoundary(real val);
