@@ -47,10 +47,10 @@ TEST_CASE( "Test applying Dirichlet boundary conditions on device", "[boundary, 
   arr.initOnDevice();
 
   arr.fill(1.0f);
-  g_kernels.fill(arr.lowerBound, arr.getDeviceData(), 2.0f, arr.nx, arr.ny, arr.ng);
-  g_kernels.fill(arr.upperBound, arr.getDeviceData(), 3.0f, arr.nx, arr.ny, arr.ng);
-  g_kernels.fill(arr.leftBound, arr.getDeviceData(), 4.0f, arr.nx, arr.ny, arr.ng);
-  g_kernels.fill(arr.rightBound, arr.getDeviceData(), 5.0f, arr.nx, arr.ny, arr.ng);
+  arr.setLowerBoundary(2.0f);
+  arr.setUpperBoundary(3.0f);
+  arr.setLeftBoundary(4.0f);
+  arr.setRightBoundary(5.0f);
   arr.toHost();
 
   for(int i=0; i<nx; ++i) {

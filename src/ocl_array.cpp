@@ -83,3 +83,19 @@ void openCLArray::fill(real val, bool includeGhost) {
   auto range = includeGhost ? entire : interior;
   g_kernels.fill(range, getDeviceData(), val, nx, ny, ng);
 }
+
+void openCLArray::setUpperBoundary(real val) {
+  g_kernels.fill(upperBound, getDeviceData(), val, nx, ny, ng);
+}
+
+void openCLArray::setLowerBoundary(real val) {
+  g_kernels.fill(lowerBound, getDeviceData(), val, nx, ny, ng);
+}
+
+void openCLArray::setLeftBoundary(real val) {
+  g_kernels.fill(leftBound, getDeviceData(), val, nx, ny, ng);
+}
+
+void openCLArray::setRightBoundary(real val) {
+  g_kernels.fill(rightBound, getDeviceData(), val, nx, ny, ng);
+}
