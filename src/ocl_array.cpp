@@ -10,7 +10,7 @@ openCLArray::openCLArray(const int nx, const int ny, const int ng, const std::st
   upperBound(makeRowRange(ny, true)),
   leftBound(makeColumnRange(-1, true)),
   rightBound(makeColumnRange(nx, true)),
-  program{buildProgramFromString(ARRAY_PROGRAM)},
+  program{buildProgramFromString(FAFS_PROGRAM)},
   fill_k{createKernelFunctor<fillKernel>(program, "fill")}
 {
   if(initDevice) {
@@ -85,29 +85,3 @@ void openCLArray::fill(real val, bool includeGhost) {
   auto range = includeGhost ? entire : interior;
   fill_k(range, getDeviceData(), val, nx, ny, ng);
 }
-
-const std::string ARRAY_PROGRAM{R"CLC(
-typedef float real;
-
-int index(int i, int j, int nx, int ny, int ng) {
-  return (i+ng)*(ny+2*ng) + (j+ng);
-}
-
-int gid(int i, int ng) {
-  return get_global_id(i) - ng;
-}
-
-__kernel void fill(
-  __global real *out,
-  __private const real val,
-  __private const int nx,
-  __private const int ny,
-  __private const int ng
-)
-{
-  int i = gid(0, ng);
-  int j = gid(1, ng);
-  int idx = index(i, j, nx, ny, ng);
-  out[idx] = val;
-}
-)CLC"};

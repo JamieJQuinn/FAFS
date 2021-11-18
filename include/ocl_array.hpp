@@ -3,10 +3,7 @@
 #include <ocl_utility.hpp>
 #include <array2d.hpp>
 #include <precision.hpp>
-
-typedef cl::KernelFunctor<cl::Buffer, real, int, int, int> fillKernel;
-
-extern const std::string ARRAY_PROGRAM;
+#include <kernels.hpp>
 
 class openCLArray: public Array {
   public:
