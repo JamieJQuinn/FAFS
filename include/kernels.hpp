@@ -3,7 +3,29 @@
 #include <iostream>
 
 #include <ocl_utility.hpp>
-#include <opencl_kernels.hpp>
+#include <precision.hpp>
+
+// Procedure for adding a kernel:
+// 1. add opencl kernel code to FAFS_PROGRAM in src/kernels.cpp
+// 2. define kernel type below
+// 3. add kernel to Kernels class definition below
+// 4. add kernel construction to Kernels constructor in src/kernels.cpp
+
+typedef cl::KernelFunctor<cl::Buffer, real, int, int, int> fillKernel;
+typedef cl::KernelFunctor<cl::Buffer, cl::Buffer, real, int, int, int> advanceEulerKernel;
+typedef cl::KernelFunctor<cl::Buffer, int, int, int> vonNeumannKernel;
+
+class Kernels {
+  public:
+    Kernels();
+    cl::Program program;
+    fillKernel fill;
+    vonNeumannKernel applyVonNeumannBC_x;
+    vonNeumannKernel applyVonNeumannBC_y;
+    advanceEulerKernel advanceEuler;
+};
+
+extern std::string FAFS_PROGRAM;
 
 template<class T>
 T createKernelFunctor(const cl::Program& program, const std::string& kernelName) {
@@ -15,13 +37,3 @@ T createKernelFunctor(const cl::Program& program, const std::string& kernelName)
   }
   return T(kernel);
 }
-
-class Kernels {
-  public:
-    Kernels();
-    cl::Program program;
-    fillKernel fill;
-    vonNeumannKernel applyVonNeumannBC_x;
-    vonNeumannKernel applyVonNeumannBC_y;
-    advanceEulerKernel advanceEuler;
-};
