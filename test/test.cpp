@@ -1,8 +1,8 @@
 #include <iostream>
 #include <catch2/catch_test_macros.hpp>
 #include <ocl_utility.hpp>
-#include <opencl_kernels.hpp>
 #include <array2d.hpp>
+#include <kernels.hpp>
 
 TEST_CASE( "Test filling array with value", "[ocl]" ) {
   const int nx = 16;
@@ -13,10 +13,9 @@ TEST_CASE( "Test filling array with value", "[ocl]" ) {
 
   arr.initOnDevice();
 
-  auto program = buildProgramFromString(FAFS_PROGRAM);
-  auto fill = fillKernel(program, "fill");
+  Kernels kernels;
 
-  fill(arr.range, arr.getDeviceData(), 1.0f, arr.nx, arr.ny, arr.ng);
+  kernels.fill(arr.range, arr.getDeviceData(), 1.0f, arr.nx, arr.ny, arr.ng);
 
   arr.toHost();
 
@@ -49,15 +48,13 @@ TEST_CASE( "Test applying Dirichlet boundary conditions on device", "[boundary, 
 
   arr.initOnDevice();
 
-  auto program = buildProgramFromString(FAFS_PROGRAM);
-  auto fill = fillKernel(program, "fill");
+  Kernels kernels;
 
-  fill(arr.range, arr.getDeviceData(), 1.0f, arr.nx, arr.ny, arr.ng);
-  fill(arr.lowerBRange, arr.getDeviceData(), 2.0f, arr.nx, arr.ny, arr.ng);
-  fill(arr.upperBRange, arr.getDeviceData(), 3.0f, arr.nx, arr.ny, arr.ng);
-  fill(arr.leftBRange, arr.getDeviceData(), 4.0f, arr.nx, arr.ny, arr.ng);
-  fill(arr.rightBRange, arr.getDeviceData(), 5.0f, arr.nx, arr.ny, arr.ng);
-
+  kernels.fill(arr.range, arr.getDeviceData(), 1.0f, arr.nx, arr.ny, arr.ng);
+  kernels.fill(arr.lowerBRange, arr.getDeviceData(), 2.0f, arr.nx, arr.ny, arr.ng);
+  kernels.fill(arr.upperBRange, arr.getDeviceData(), 3.0f, arr.nx, arr.ny, arr.ng);
+  kernels.fill(arr.leftBRange, arr.getDeviceData(), 4.0f, arr.nx, arr.ny, arr.ng);
+  kernels.fill(arr.rightBRange, arr.getDeviceData(), 5.0f, arr.nx, arr.ny, arr.ng);
   arr.toHost();
 
   for(int i=0; i<nx; ++i) {
@@ -92,14 +89,11 @@ TEST_CASE( "Test applying von Neumann boundary conditions on device", "[boundary
 
   arr.initOnDevice();
 
-  auto program = buildProgramFromString(FAFS_PROGRAM);
-  auto fill = fillKernel(program, "fill");
-  auto applyVonNeumannBC_y = vonNeumannKernel(program, "applyVonNeumannBC_y");
-  auto applyVonNeumannBC_x = vonNeumannKernel(program, "applyVonNeumannBC_x");
+  Kernels kernels;
 
-  fill(arr.range, arr.getDeviceData(), 1.0f, arr.nx, arr.ny, arr.ng);
-  applyVonNeumannBC_y(arr.lowerBRange, arr.getDeviceData(), arr.nx, arr.ny, arr.ng);
-  applyVonNeumannBC_x(arr.leftBRange, arr.getDeviceData(), arr.nx, arr.ny, arr.ng);
+  kernels.fill(arr.range, arr.getDeviceData(), 1.0f, arr.nx, arr.ny, arr.ng);
+  kernels.applyVonNeumannBC_y(arr.lowerBRange, arr.getDeviceData(), arr.nx, arr.ny, arr.ng);
+  kernels.applyVonNeumannBC_x(arr.leftBRange, arr.getDeviceData(), arr.nx, arr.ny, arr.ng);
 
   arr.toHost();
 
@@ -138,13 +132,11 @@ TEST_CASE( "Test Euler method", "[ocl]" ) {
   arr.initOnDevice();
   ddt.initOnDevice();
 
-  auto program = buildProgramFromString(FAFS_PROGRAM);
-  auto fill = fillKernel(program, "fill");
-  auto advanceEuler = advanceEulerKernel(program, "advanceEuler");
+  Kernels kernels;
 
-  fill(arr.range, arr.getDeviceData(), 1.0f, arr.nx, arr.ny, arr.ng);
-  fill(ddt.range, ddt.getDeviceData(), 1.0f, ddt.nx, ddt.ny, ddt.ng);
-  advanceEuler(arr.range, arr.getDeviceData(), ddt.getDeviceData(), dt, arr.nx, arr.ny, arr.ng);
+  kernels.fill(arr.range, arr.getDeviceData(), 1.0f, arr.nx, arr.ny, arr.ng);
+  kernels.fill(ddt.range, ddt.getDeviceData(), 1.0f, ddt.nx, ddt.ny, ddt.ng);
+  kernels.advanceEuler(arr.range, arr.getDeviceData(), ddt.getDeviceData(), dt, arr.nx, arr.ny, arr.ng);
 
   arr.toHost();
 
