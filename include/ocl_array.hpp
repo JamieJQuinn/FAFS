@@ -13,16 +13,18 @@ class openCLArray: public Array {
     const cl::Buffer& getDeviceData() const;
     cl::Buffer& getDeviceData();
     const cl::EnqueueArgs makeRange(int x0, int x1, int y0, int y1) const;
+    const cl::EnqueueArgs makeColumnRange(int col, bool includeGhost=false) const;
+    const cl::EnqueueArgs makeRowRange(int row, bool includeGhost=false) const;
 
     void toDevice();
     void toHost();
 
     cl::EnqueueArgs interior;
     cl::EnqueueArgs entire;
-    cl::EnqueueArgs lowerBRange;
-    cl::EnqueueArgs upperBRange;
-    cl::EnqueueArgs leftBRange;
-    cl::EnqueueArgs rightBRange;
+    cl::EnqueueArgs lowerBound;
+    cl::EnqueueArgs upperBound;
+    cl::EnqueueArgs leftBound;
+    cl::EnqueueArgs rightBound;
 
   protected:
     cl::Buffer d_data; // data on device

@@ -3,12 +3,12 @@
 openCLArray::openCLArray(const int nx, const int ny, const int ng, const std::string& name, real initialVal, bool initDevice):
   Array(nx, ny, ng, name, initialVal),
   isDeviceDirty{true},
-  interior(makeRange(0, nx, 0, ny)),
-  entire(makeRange(-1, nx+1, -1, ny+1)),
-  lowerBRange(cl::NDRange(0,0), cl::NDRange(nx+2*ng, 1), cl::NDRange(nx+2*ng, 1)),
-  upperBRange(cl::NDRange(0,ny+ng), cl::NDRange(nx+2*ng, 1), cl::NDRange(nx+2*ng, 1)),
-  leftBRange(cl::NDRange(0,0), cl::NDRange(1, ny+2*ng), cl::NDRange(1, ny+2*ng)),
-  rightBRange(cl::NDRange(nx+ng,0), cl::NDRange(1, ny+2*ng), cl::NDRange(1, ny+2*ng))
+  interior(makeRange(0, 0, nx, ny)),
+  entire(makeRange(-1, -1, nx+1, ny+1)),
+  lowerBound(makeRowRange(-1, true)),
+  upperBound(makeRowRange(ny, true)),
+  leftBound(makeColumnRange(-1, true)),
+  rightBound(makeColumnRange(nx, true))
 {
   if(initDevice) {
     initOnDevice();
@@ -45,8 +45,30 @@ void openCLArray::toHost() {
   isDeviceDirty = false;
 }
 
-const cl::EnqueueArgs openCLArray::makeRange(int x0, int x1, int y0, int y1) const {
+const cl::EnqueueArgs openCLArray::makeRange(int x0, int y0, int x1, int y1) const {
   int xGroup = x1-x0;
   int yGroup = y1-y0;
   return cl::EnqueueArgs(cl::NDRange(x0+ng, y0+ng), cl::NDRange(x1-x0, y1-y0), cl::NDRange(xGroup, yGroup));
+}
+
+const cl::EnqueueArgs openCLArray::makeColumnRange(int col, bool includeGhost) const {
+  int x0=col, y0=0, x1=col+1, y1=ny;
+
+  if(includeGhost) {
+    y0 -= ng;
+    y1 += ng;
+  }
+
+  return makeRange(x0,y0,x1,y1);
+}
+
+const cl::EnqueueArgs openCLArray::makeRowRange(int row, bool includeGhost) const {
+  int x0=0, y0=row, x1=nx, y1=row+1;
+
+  if(includeGhost) {
+    x0 -= ng;
+    x1 += ng;
+  }
+
+  return makeRange(x0,y0,x1,y1);
 }

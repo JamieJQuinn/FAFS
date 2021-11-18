@@ -52,13 +52,13 @@ TEST_CASE( "Test applying Dirichlet boundary conditions on device", "[boundary, 
 
   kernels.fill(arr.interior, arr.getDeviceData(), 1.0f, arr.nx, arr.ny, arr.ng);
   try {
-    kernels.fill(arr.lowerBRange, arr.getDeviceData(), 2.0f, arr.nx, arr.ny, arr.ng);
+    kernels.fill(arr.lowerBound, arr.getDeviceData(), 2.0f, arr.nx, arr.ny, arr.ng);
   } catch (cl::Error& e) {
     std::cout << e.what() << ", " << e.err() << std::endl;
   }
-  kernels.fill(arr.upperBRange, arr.getDeviceData(), 3.0f, arr.nx, arr.ny, arr.ng);
-  kernels.fill(arr.leftBRange, arr.getDeviceData(), 4.0f, arr.nx, arr.ny, arr.ng);
-  kernels.fill(arr.rightBRange, arr.getDeviceData(), 5.0f, arr.nx, arr.ny, arr.ng);
+  kernels.fill(arr.upperBound, arr.getDeviceData(), 3.0f, arr.nx, arr.ny, arr.ng);
+  kernels.fill(arr.leftBound, arr.getDeviceData(), 4.0f, arr.nx, arr.ny, arr.ng);
+  kernels.fill(arr.rightBound, arr.getDeviceData(), 5.0f, arr.nx, arr.ny, arr.ng);
   arr.toHost();
 
   for(int i=0; i<nx; ++i) {
@@ -96,8 +96,8 @@ TEST_CASE( "Test applying von Neumann boundary conditions on device", "[boundary
   Kernels kernels;
 
   kernels.fill(arr.interior, arr.getDeviceData(), 1.0f, arr.nx, arr.ny, arr.ng);
-  kernels.applyVonNeumannBC_y(arr.lowerBRange, arr.getDeviceData(), arr.nx, arr.ny, arr.ng);
-  kernels.applyVonNeumannBC_x(arr.leftBRange, arr.getDeviceData(), arr.nx, arr.ny, arr.ng);
+  kernels.applyVonNeumannBC_y(arr.lowerBound, arr.getDeviceData(), arr.nx, arr.ny, arr.ng);
+  kernels.applyVonNeumannBC_x(arr.leftBound, arr.getDeviceData(), arr.nx, arr.ny, arr.ng);
 
   arr.toHost();
 
