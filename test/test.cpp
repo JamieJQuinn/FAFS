@@ -3,6 +3,7 @@
 #include <ocl_utility.hpp>
 #include <ocl_array.hpp>
 #include <kernels.hpp>
+#include <user_kernels.hpp>
 
 TEST_CASE( "Test filling array with value", "[ocl]" ) {
   const int nx = 16;
@@ -10,8 +11,6 @@ TEST_CASE( "Test filling array with value", "[ocl]" ) {
   const int ng = 1;
 
   OpenCLArray arr(nx, ny, ng);
-
-  arr.initOnDevice();
 
   arr.fill(1.0f);
 
@@ -43,8 +42,6 @@ TEST_CASE( "Test applying Dirichlet boundary conditions on device", "[boundary, 
   const int ng = 1;
 
   OpenCLArray arr(nx, ny, ng);
-
-  arr.initOnDevice();
 
   arr.fill(1.0f);
   arr.setLowerBoundary(2.0f);
@@ -82,8 +79,6 @@ TEST_CASE( "Test applying von Neumann boundary conditions on device", "[boundary
   const int ng = 1;
 
   OpenCLArray arr(nx, ny, ng);
-
-  arr.initOnDevice();
 
   arr.fill(1.0f);
   g_kernels.applyVonNeumannBC_y(arr.lowerBound, arr.getDeviceData(), arr.nx, arr.ny, arr.ng);
@@ -123,12 +118,9 @@ TEST_CASE( "Test Euler method", "[ocl]" ) {
   OpenCLArray arr(nx, ny, ng);
   OpenCLArray ddt(nx, ny, ng);
 
-  arr.initOnDevice();
-  ddt.initOnDevice();
-
   arr.fill(1.0f);
   ddt.fill(1.0f);
-  g_kernels.advanceEuler(arr.interior, arr.getDeviceData(), ddt.getDeviceData(), dt, arr.nx, arr.ny, arr.ng);
+  advanceEuler(arr, ddt, dt);
 
   arr.toHost();
 
@@ -149,7 +141,7 @@ TEST_CASE( "Test Euler method", "[ocl]" ) {
   }
 }
 
-TEST_CASE( "Test calculating diffusion term", "[ocl") {
+TEST_CASE( "Test calculating diffusion term", "[ocl]") {
   const int nx = 16;
   const int ny = 16;
   const int ng = 1;
@@ -157,11 +149,8 @@ TEST_CASE( "Test calculating diffusion term", "[ocl") {
   OpenCLArray arr(nx, ny, ng);
   OpenCLArray res(nx, ny, ng);
 
-  arr.initOnDevice();
-  res.initOnDevice();
-
   arr.fill(1.0f, true);
-  g_kernels.calcDiffusionTerm(res.interior, res.getDeviceData(), arr.getDeviceData(), 1.0f, 1.0f, res.nx, res.ny, res.ng);
+  calcDiffusionTerm(res, arr, 1.0f, 1.0f, 1.0f);
 
   res.toHost();
 
@@ -172,7 +161,7 @@ TEST_CASE( "Test calculating diffusion term", "[ocl") {
   }
 }
 
-TEST_CASE( "Test calculating advection term", "[ocl") {
+TEST_CASE( "Test calculating advection term", "[ocl]") {
   const int nx = 16;
   const int ny = 16;
   const int ng = 1;
@@ -182,15 +171,10 @@ TEST_CASE( "Test calculating advection term", "[ocl") {
   OpenCLArray vy(nx, ny, ng);
   OpenCLArray res(nx, ny, ng);
 
-  arr.initOnDevice();
-  vx.initOnDevice();
-  vy.initOnDevice();
-  res.initOnDevice();
-
   arr.fill(1.0f, true);
   vx.fill(1.0f, true);
   vy.fill(1.0f, true);
-  g_kernels.calcAdvectionTerm(res.interior, res.getDeviceData(), arr.getDeviceData(), vx.getDeviceData(), vy.getDeviceData(), 1.0f, 1.0f, res.nx, res.ny, res.ng);
+  calcAdvectionTerm(res, arr, vx, vy, 1.0f, 1.0f);
 
   res.toHost();
 
@@ -199,4 +183,33 @@ TEST_CASE( "Test calculating advection term", "[ocl") {
       REQUIRE(res(i,j) == 0.0f);
     }
   }
+}
+
+TEST_CASE( "Test Jacobi iteration", "[ocl]") {
+  const int nx = 16;
+  const int ny = 16;
+  const int ng = 1;
+
+  const real dx = 1.0f/(nx-1);
+  const real dy = 1.0f/(ny-1);
+
+  OpenCLArray res(nx, ny, ng);
+  OpenCLArray temp1(nx, ny, ng);
+  OpenCLArray temp2(nx, ny, ng);
+  OpenCLArray b(nx, ny, ng);
+
+  res.fill(1.0f, true);
+  temp1.fill(0.0f, true);
+  temp2.fill(0.0f, true);
+  b.fill(0.0f, true);
+
+  runJacobiIteration(temp2, temp1, -dx*dy, 4.0f, b);
+
+  res.toHost();
+
+  //for(int i=0; i<nx; ++i) {
+    //for(int j=0; j<nx; ++j) {
+      //REQUIRE(res(i,j) == 0.0f);
+    //}
+  //}
 }

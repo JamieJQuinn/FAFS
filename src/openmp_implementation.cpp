@@ -94,7 +94,7 @@ void runCPU() {
 
     // DIFFUSION
     real alpha = c.Re*c.dx*c.dy/c.dt;
-    real beta = 4+alpha;
+    real beta = 4.0f+alpha;
 
     // Diffuse vx
     // Implicit

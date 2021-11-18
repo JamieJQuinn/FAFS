@@ -7,7 +7,8 @@ Kernels::Kernels():
   applyVonNeumannBC_y{createKernelFunctor<vonNeumannKernel>(program, "applyVonNeumannBC_y")},
   advanceEuler{createKernelFunctor<advanceEulerKernel>(program, "advanceEuler")},
   calcDiffusionTerm{createKernelFunctor<calcDiffusionKernel>(program, "calcDiffusionTerm")},
-  calcAdvectionTerm{createKernelFunctor<calcAdvectionKernel>(program, "calcAdvectionTerm")}
+  calcAdvectionTerm{createKernelFunctor<calcAdvectionKernel>(program, "calcAdvectionTerm")},
+  applyJacobiStep{createKernelFunctor<applyJacobiKernel>(program, "applyJacobiStep")}
 {}
 
 const std::string FAFS_PROGRAM{R"CLC(
@@ -126,6 +127,7 @@ __kernel void calcDiffusionTerm(
   __global const real *f,
   __private const real dx,
   __private const real dy,
+  __private const real Re,
   __private const int nx,
   __private const int ny,
   __private const int ng
@@ -138,7 +140,30 @@ __kernel void calcDiffusionTerm(
   int imj = index(i-1, j, nx, ny, ng);
   int ijp = index(i, j+1, nx, ny, ng);
   int ijm = index(i, j-1, nx, ny, ng);
-  out[ij] = (f[ijp] + f[ijm] + f[ipj] + f[imj] - 4*f[ij])/(dx*dy);
+  out[ij] = (f[ijp] + f[ijm] + f[ipj] + f[imj] - 4*f[ij])/(Re*dx*dy);
+}
+
+__kernel void applyJacobiStep(
+  __global real *out,
+  __global const real *in,
+  __private const real alpha,
+  __private const real beta,
+  __global const real *b,
+  __private const int nx,
+  __private const int ny,
+  __private const int ng
+)
+{
+  int i = gid(0, ng);
+  int j = gid(1, ng);
+
+  int ij = index(i, j, nx, ny, ng);
+  int ipj = index(i+1, j, nx, ny, ng);
+  int imj = index(i-1, j, nx, ny, ng);
+  int ijp = index(i, j+1, nx, ny, ng);
+  int ijm = index(i, j-1, nx, ny, ng);
+
+  out[ij] = (alpha*b[ij] + in[ijp] + in[ijm] + in[ipj] + in[imj])/beta;
 }
 )CLC"};
 
