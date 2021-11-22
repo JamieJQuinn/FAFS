@@ -50,7 +50,7 @@ void OpenCLArray::toHost() {
 const cl::EnqueueArgs OpenCLArray::makeRange(int x0, int y0, int x1, int y1) const {
   int xGroup = x1-x0;
   int yGroup = y1-y0;
-  return cl::EnqueueArgs(cl::NDRange(x0+ng, y0+ng), cl::NDRange(x1-x0, y1-y0), cl::NDRange(xGroup, yGroup));
+  return cl::EnqueueArgs(cl::NDRange(x0+ng, y0+ng), cl::NDRange(x1-x0, y1-y0), cl::NullRange);
 }
 
 const cl::EnqueueArgs OpenCLArray::makeColumnRange(int col, bool includeGhost) const {
