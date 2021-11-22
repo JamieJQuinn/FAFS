@@ -6,3 +6,9 @@ void calcDiffusionTerm(OpenCLArray& out, const OpenCLArray& f, const real dx, co
 void calcAdvectionTerm(OpenCLArray& out, const OpenCLArray& f, const OpenCLArray& vx, const OpenCLArray& vy, const real dx, const real dy);
 void advanceEuler(OpenCLArray& out, const OpenCLArray& ddt, const real dt);
 
+void applyVonNeumannBC(OpenCLArray& out);
+void applyNoSlipBC(OpenCLArray& var);
+
+void calcDivergence(OpenCLArray& out, OpenCLArray& fx, OpenCLArray& fy, const real dx, const real dy);
+void applyProjectionX(OpenCLArray& out, OpenCLArray& f, const real dx);
+void applyProjectionY(OpenCLArray& out, OpenCLArray& f, const real dy);

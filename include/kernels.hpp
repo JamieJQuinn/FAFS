@@ -17,6 +17,8 @@ typedef cl::KernelFunctor<cl::Buffer, cl::Buffer, real, real, real, int, int, in
 typedef cl::KernelFunctor<cl::Buffer, cl::Buffer, cl::Buffer, cl::Buffer, real, real, int, int, int> calcAdvectionKernel;
 typedef cl::KernelFunctor<cl::Buffer, int, int, int> vonNeumannKernel;
 typedef cl::KernelFunctor<cl::Buffer, cl::Buffer, real, real, cl::Buffer, int, int, int> applyJacobiKernel;
+typedef cl::KernelFunctor<cl::Buffer, cl::Buffer, cl::Buffer, real, real, int, int, int> calcDivergence_k;
+typedef cl::KernelFunctor<cl::Buffer, cl::Buffer, real, int, int, int> applyProjection_k;
 
 class Kernels {
   public:
@@ -31,6 +33,9 @@ class Kernels {
     calcDiffusionKernel calcDiffusionTerm;
     calcAdvectionKernel calcAdvectionTerm;
     applyJacobiKernel applyJacobiStep;
+    calcDivergence_k calcDivergence;
+    applyProjection_k applyProjectionX;
+    applyProjection_k applyProjectionY;
 };
 
 extern const std::string FAFS_PROGRAM;

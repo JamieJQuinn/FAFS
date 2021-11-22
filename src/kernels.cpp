@@ -8,7 +8,10 @@ Kernels::Kernels():
   advanceEuler{createKernelFunctor<advanceEulerKernel>(program, "advanceEuler")},
   calcDiffusionTerm{createKernelFunctor<calcDiffusionKernel>(program, "calcDiffusionTerm")},
   calcAdvectionTerm{createKernelFunctor<calcAdvectionKernel>(program, "calcAdvectionTerm")},
-  applyJacobiStep{createKernelFunctor<applyJacobiKernel>(program, "applyJacobiStep")}
+  applyJacobiStep{createKernelFunctor<applyJacobiKernel>(program, "applyJacobiStep")},
+  calcDivergence{createKernelFunctor<calcDivergence_k>(program, "calcDivergence")},
+  applyProjectionX{createKernelFunctor<applyProjection_k>(program, "applyProjectionX")},
+  applyProjectionY{createKernelFunctor<applyProjection_k>(program, "applyProjectionY")}
 {}
 
 const std::string FAFS_PROGRAM{R"CLC(
@@ -164,6 +167,69 @@ __kernel void applyJacobiStep(
   int ijm = index(i, j-1, nx, ny, ng);
 
   out[ij] = (alpha*b[ij] + in[ijp] + in[ijm] + in[ipj] + in[imj])/beta;
+}
+
+__kernel void calcDivergence(
+  __global real *out,
+  __global const real *fx,
+  __global const real *fy,
+  __private const real dx,
+  __private const real dy,
+  __private const int nx,
+  __private const int ny,
+  __private const int ng
+)
+{
+  int i = gid(0, ng);
+  int j = gid(1, ng);
+
+  int vij = index(i, j, nx-1, ny-1, ng);
+  int vimj = index(i-1, j, nx-1, ny-1, ng);
+  int vijm = index(i, j-1, nx-1, ny-1, ng);
+
+  int ij = index(i, j, nx, ny, ng);
+
+  out[ij] = (fx[vij] - fx[vimj])/dx + (fy[vij] - fy[vijm])/dy;
+}
+
+__kernel void applyProjectionX(
+  __global real *out,
+  __global const real *f,
+  __private const real dx,
+  __private const int nx,
+  __private const int ny,
+  __private const int ng
+)
+{
+  int i = gid(0, ng);
+  int j = gid(1, ng);
+
+  int ij = index(i, j, nx, ny, ng);
+
+  int cij =  index(i  , j, nx+1, ny+1, ng);
+  int cipj = index(i+1, j, nx+1, ny+1, ng);
+
+  out[ij] = out[ij] - (f[cipj] - f[cij])/dx;
+}
+
+__kernel void applyProjectionY(
+  __global real *out,
+  __global const real *f,
+  __private const real dy,
+  __private const int nx,
+  __private const int ny,
+  __private const int ng
+)
+{
+  int i = gid(0, ng);
+  int j = gid(1, ng);
+
+  int ij = index(i, j, nx, ny, ng);
+
+  int cij =  index(i, j  , nx+1, ny+1, ng);
+  int cijp = index(i, j+1, nx+1, ny+1, ng);
+
+  out[ij] = out[ij] - (f[cijp] - f[cij])/dy;
 }
 )CLC"};
 
