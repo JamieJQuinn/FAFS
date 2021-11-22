@@ -8,8 +8,7 @@ Array::Array(const int nx_in, const int ny_in, const int ng_in, const std::strin
   nx{nx_in},
   ny{ny_in},
   ng{ng_in},
-  data(size()),
-  hasName{name_in != ""}
+  data(size())
 {
   setName(name_in);
   fill(initialVal);
@@ -82,7 +81,7 @@ void Array::saveTo(H5::H5File& file) const {
 
 void Array::setName(const std::string& name) {
   this->name = name;
-  hasName = true;
+  hasName = name != "";
 }
 
 void Array::swap(Array& arr) {
