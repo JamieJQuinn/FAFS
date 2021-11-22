@@ -6,8 +6,8 @@
 #include <user_kernels.hpp>
 
 TEST_CASE( "Test filling array with value", "[ocl]" ) {
-  const int nx = 16;
-  const int ny = 16;
+  const int nx = 64;
+  const int ny = 64;
   const int ng = 1;
 
   OpenCLArray arr(nx, ny, ng);
@@ -37,8 +37,8 @@ TEST_CASE( "Test filling array with value", "[ocl]" ) {
 }
 
 TEST_CASE( "Test applying Dirichlet boundary conditions on device", "[boundary, ocl]" ) {
-  const int nx = 16;
-  const int ny = 16;
+  const int nx = 64;
+  const int ny = 64;
   const int ng = 1;
 
   OpenCLArray arr(nx, ny, ng);
