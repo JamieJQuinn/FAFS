@@ -6,7 +6,7 @@
 #include <openmp_kernels.hpp>
 
 
-void setInitialConditions(Variables& vars) {
+void setInitialConditions(Variables<Array>& vars) {
   for (int i=0; i<vars.vx.nx; ++i) {
     for (int j=0; j<vars.vx.ny; ++j) {
       vars.vx(i,j) = 0.0f;
@@ -49,7 +49,7 @@ void applyVyBC(Array& vy) {
   applyNoSlipBC(vy);
 }
 
-void applyBoundaryConditions(Variables& vars) {
+void applyBoundaryConditions(Variables<Array>& vars) {
   applyVxBC(vars.vx);
   applyVyBC(vars.vy);
 }
@@ -57,7 +57,7 @@ void applyBoundaryConditions(Variables& vars) {
 void runCPU() {
   const Constants c;
 
-  Variables vars(c);
+  Variables <Array> vars(c);
 
   setInitialConditions(vars);
   applyBoundaryConditions(vars);
