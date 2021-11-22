@@ -81,8 +81,7 @@ TEST_CASE( "Test applying von Neumann boundary conditions on device", "[boundary
   OpenCLArray arr(nx, ny, ng);
 
   arr.fill(1.0f);
-  g_kernels.applyVonNeumannBC_y(arr.lowerBound, arr.getDeviceData(), arr.nx, arr.ny, arr.ng);
-  g_kernels.applyVonNeumannBC_x(arr.leftBound, arr.getDeviceData(), arr.nx, arr.ny, arr.ng);
+  applyVonNeumannBC(arr);
 
   arr.toHost();
 
