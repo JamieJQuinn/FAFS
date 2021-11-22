@@ -76,8 +76,12 @@ const cl::EnqueueArgs OpenCLArray::makeRowRange(int row, bool includeGhost) cons
 }
 
 void OpenCLArray::swapData(OpenCLArray& arr) {
-  Array::swap(arr);
   std::swap(d_data, arr.d_data);
+  Array::swapData(arr);
+}
+
+void OpenCLArray::fillHost(real val) {
+  Array::fill(val);
 }
 
 void OpenCLArray::fill(real val, bool includeGhost) {

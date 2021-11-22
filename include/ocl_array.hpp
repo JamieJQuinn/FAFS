@@ -18,6 +18,7 @@ class OpenCLArray: public Array {
     const cl::EnqueueArgs makeRowRange(int row, bool includeGhost=false) const;
     void swapData(OpenCLArray& arr);
     void fill(real val, bool includeGhost = false);
+    void fillHost(real val);
     void setUpperBoundary(real val);
     void setLowerBoundary(real val);
     void setLeftBoundary(real val);
