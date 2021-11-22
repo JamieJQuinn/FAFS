@@ -67,16 +67,30 @@ void Array::operator+=(const Array& arr) {
 
 void Array::saveTo(H5::H5File& file) const {
   if (!hasName) {
-    std::cerr << "Cannot save unnamed Array" << std::endl;
+    throw std::runtime_error("Cannot save unnamed Array");
   }
   hsize_t dims[2];
   dims[0] = nx + 2*ng;
   dims[1] = ny + 2*ng;
   H5::DataSpace dataspace(2, dims);
-  H5::FloatType datatype(H5::PredType::NATIVE_DOUBLE);
+  H5::FloatType datatype(H5::PredType::NATIVE_FLOAT);
   datatype.setOrder(H5T_ORDER_LE);
   H5::DataSet ds = file.createDataSet(name.c_str(), datatype, dataspace);
-  ds.write(data.data(), H5::PredType::NATIVE_DOUBLE);
+  ds.write(data.data(), H5::PredType::NATIVE_FLOAT);
+}
+
+void Array::load(H5::H5File& file) {
+  if (!hasName) {
+    throw std::runtime_error("Cannot load unnamed Array");
+  }
+  H5::DataSet ds = file.openDataSet(name.c_str());
+  H5::DataSpace filespace = ds.getSpace();
+  int ndims = filespace.getSimpleExtentNdims();
+  hsize_t dims[2];
+  filespace.getSimpleExtentDims(dims);
+
+    H5::DataSpace memspace (ndims, dims);
+  ds.read(data.data(), H5::PredType::NATIVE_FLOAT, memspace, filespace);
 }
 
 void Array::setName(const std::string& name) {

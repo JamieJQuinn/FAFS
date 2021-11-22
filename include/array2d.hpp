@@ -20,6 +20,7 @@ class Array {
     Array& operator=(const Array& arr);
     void operator+=(const Array& arr);
     void saveTo(H5::H5File& file) const;
+    void load(H5::H5File& file);
     void setName(const std::string& name);
     void swap(Array& arr);
     void swapData(Array& arr);

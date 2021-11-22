@@ -4,6 +4,7 @@
 #include <ocl_array.hpp>
 #include <kernels.hpp>
 #include <user_kernels.hpp>
+#include <hdffile.hpp>
 
 TEST_CASE( "Test filling array with value", "[ocl]" ) {
   const int nx = 64;
@@ -221,6 +222,38 @@ TEST_CASE( "Test Jacobi iteration", "[ocl]") {
   for(int i=0; i<nx; ++i) {
     for(int j=0; j<nx; ++j) {
       REQUIRE(resImplicit(i,j) == resExplicit(i,j));
+    }
+  }
+}
+
+TEST_CASE( "Test saving OpenCLArray", "[ocl]") {
+  const int nx = 64;
+  const int ny = 64;
+  const int ng = 1;
+
+  OpenCLArray arr(nx, ny, ng, "test");
+
+  for(int i=0; i< arr.nx; ++i) {
+    for(int j=0; j< arr.ny; ++j) {
+      arr(i,j) = i+2.0*j;
+    }
+  }
+
+  // Write file
+  HDFFile file("test.hdf5", false);
+  arr.saveTo(file.file);
+  file.close();
+
+  // Read in a new array
+  OpenCLArray arr_in(nx, ny, ng, "test");
+  file.open("test.hdf5");
+  arr_in.load(file.file);
+  file.close();
+
+  // Check array is the same as the one we wrote
+  for(int i=0; i< arr.nx; ++i) {
+    for(int j=0; j< arr.ny; ++j) {
+      arr_in(i,j) = arr(i,j);
     }
   }
 }
