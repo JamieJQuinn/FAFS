@@ -31,4 +31,5 @@ class Array {
     std::vector<real> data;
     std::string name;
     bool hasName;
+    H5::PredType h5ArrayType;
 };

@@ -8,7 +8,8 @@ Array::Array(const int nx_in, const int ny_in, const int ng_in, const std::strin
   nx{nx_in},
   ny{ny_in},
   ng{ng_in},
-  data(size())
+  data(size()),
+  h5ArrayType(H5::PredType::NATIVE_FLOAT)
 {
   setName(name_in);
   fill(initialVal);
@@ -73,10 +74,10 @@ void Array::saveTo(H5::H5File& file) const {
   dims[0] = nx + 2*ng;
   dims[1] = ny + 2*ng;
   H5::DataSpace dataspace(2, dims);
-  H5::FloatType datatype(H5::PredType::NATIVE_FLOAT);
+  H5::FloatType datatype(h5ArrayType);
   datatype.setOrder(H5T_ORDER_LE);
   H5::DataSet ds = file.createDataSet(name.c_str(), datatype, dataspace);
-  ds.write(data.data(), H5::PredType::NATIVE_FLOAT);
+  ds.write(data.data(), h5ArrayType);
 }
 
 void Array::load(H5::H5File& file) {
@@ -90,7 +91,7 @@ void Array::load(H5::H5File& file) {
   filespace.getSimpleExtentDims(dims);
 
   H5::DataSpace memspace (ndims, dims);
-  ds.read(data.data(), H5::PredType::NATIVE_FLOAT, memspace, filespace);
+  ds.read(data.data(), h5ArrayType, memspace, filespace);
 }
 
 void Array::setName(const std::string& name) {
