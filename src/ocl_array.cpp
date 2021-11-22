@@ -14,6 +14,7 @@ OpenCLArray::OpenCLArray(const int nx, const int ny, const int ng, const std::st
   if(initDevice) {
     initOnDevice();
   }
+  fill(initialVal, true);
 }
 
 void OpenCLArray::initOnDevice(bool readOnly) {
