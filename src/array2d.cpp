@@ -89,7 +89,7 @@ void Array::load(H5::H5File& file) {
   hsize_t dims[2];
   filespace.getSimpleExtentDims(dims);
 
-    H5::DataSpace memspace (ndims, dims);
+  H5::DataSpace memspace (ndims, dims);
   ds.read(data.data(), H5::PredType::NATIVE_FLOAT, memspace, filespace);
 }
 
