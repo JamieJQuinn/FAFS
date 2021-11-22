@@ -23,6 +23,7 @@ class OpenCLArray: public Array {
     void setLowerBoundary(real val);
     void setLeftBoundary(real val);
     void setRightBoundary(real val);
+    void saveTo(H5::H5File& file) ;
 
     void toDevice();
     void toHost();

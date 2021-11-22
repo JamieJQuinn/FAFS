@@ -104,3 +104,8 @@ void OpenCLArray::setLeftBoundary(real val) {
 void OpenCLArray::setRightBoundary(real val) {
   g_kernels.fill(rightBound, getDeviceData(), val, nx, ny, ng);
 }
+
+void OpenCLArray::saveTo(H5::H5File& file) {
+  toHost();
+  Array::saveTo(file);
+}
