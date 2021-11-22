@@ -13,13 +13,18 @@ def main():
                         help='components of vector to plot via streamlines')
     parser.add_argument('--quiver', nargs=2, default=[],
                         help='components of vector to plot via quiver')
+    parser.add_argument('--show_ghost', action="store_true",
+                        help='show ghost cells in imshow')
 
     args = parser.parse_args()
     fname = args.filename
 
     with h5py.File(fname, "r") as hf:
         if args.imshow:
-            data = hf[args.imshow][1:-1, 1:-1].T
+            if args.show_ghost:
+                data = hf[args.imshow][:,:].T
+            else:
+                data = hf[args.imshow][1:-1, 1:-1].T
             im = plt.imshow(data, origin='lower', extent=(0, 1, 0, 1))
             plt.colorbar(im)
         if args.streamplot:
