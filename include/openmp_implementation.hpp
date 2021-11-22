@@ -2,5 +2,5 @@
 
 #include <variables.hpp>
 
-void runCPU();
-void setInitialConditions(Variables& vars);
+int runCPU();
+void setInitialConditions(Variables<Array>& vars);

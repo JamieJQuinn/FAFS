@@ -54,7 +54,7 @@ void applyBoundaryConditions(Variables<Array>& vars) {
   applyVyBC(vars.vy);
 }
 
-void runCPU() {
+int runCPU() {
   const Constants c;
 
   Variables <Array> vars(c);
@@ -71,7 +71,7 @@ void runCPU() {
   // Working array for divergence
   Array divw(c.nx+1, c.ny+1, c.ng, "divw");
 
-  HDFFile icFile("000000.hdf5");
+  HDFFile icFile("000000.hdf5", false);
   vars.vx.saveTo(icFile.file);
   vars.vy.saveTo(icFile.file);
   icFile.close();
@@ -138,11 +138,13 @@ void runCPU() {
     t += c.dt;
   }
 
-  HDFFile laterFile("000001.hdf5");
+  HDFFile laterFile("000001.hdf5", false);
   vars.vx.saveTo(laterFile.file);
   vars.vy.saveTo(laterFile.file);
   vars.p.saveTo(laterFile.file);
   divw.saveTo(laterFile.file);
   icFile.close();
+
+  return 0;
 }
 
