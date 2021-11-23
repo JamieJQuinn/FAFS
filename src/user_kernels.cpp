@@ -44,3 +44,6 @@ void applyProjectionY(OpenCLArray& out, OpenCLArray& f, const real dy) {
   g_kernels.applyProjectionY(out.interior, out.getDeviceData(), f.getDeviceData(), dy, out.nx, out.ny, out.ng);
 }
 
+void advectImplicit(OpenCLArray& out, OpenCLArray& f, OpenCLArray& vx, OpenCLArray& vy, const real dx, const real dy, const real dt) {
+  g_kernels.advect(out.interior, out.getDeviceData(), f.getDeviceData(), vx.getDeviceData(), vy.getDeviceData(), dx, dy, dt, out.nx, out.ny, out.ng);
+}

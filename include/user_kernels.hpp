@@ -12,3 +12,5 @@ void applyNoSlipBC(OpenCLArray& var);
 void calcDivergence(OpenCLArray& out, OpenCLArray& fx, OpenCLArray& fy, const real dx, const real dy);
 void applyProjectionX(OpenCLArray& out, OpenCLArray& f, const real dx);
 void applyProjectionY(OpenCLArray& out, OpenCLArray& f, const real dy);
+
+void advectImplicit(OpenCLArray& out, OpenCLArray& f, OpenCLArray& vx, OpenCLArray& vy, const real dx, const real dy, const real dt);

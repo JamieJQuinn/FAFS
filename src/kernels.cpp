@@ -11,7 +11,8 @@ Kernels::Kernels():
   applyJacobiStep{createKernelFunctor<applyJacobiKernel>(program, "applyJacobiStep")},
   calcDivergence{createKernelFunctor<calcDivergence_k>(program, "calcDivergence")},
   applyProjectionX{createKernelFunctor<applyProjection_k>(program, "applyProjectionX")},
-  applyProjectionY{createKernelFunctor<applyProjection_k>(program, "applyProjectionY")}
+  applyProjectionY{createKernelFunctor<applyProjection_k>(program, "applyProjectionY")},
+  advect{createKernelFunctor<advect_k>(program, "advect")}
 {}
 
 const std::string FAFS_PROGRAM{R"CLC(
@@ -230,6 +231,64 @@ __kernel void applyProjectionY(
   int cijp = index(i, j+1, nx+1, ny+1, ng);
 
   out[ij] = out[ij] - (f[cijp] - f[cij])/dy;
+}
+
+__kernel void advect(
+  __global real *out,
+  __global const real *f,
+  __global const real *vx,
+  __global const real *vy,
+  __private const real dx,
+  __private const real dy,
+  __private const real dt,
+  __private const int nx,
+  __private const int ny,
+  __private const int ng
+) {
+  int i = gid(0, ng);
+  int j = gid(1, ng);
+
+  int ij = index(i, j, nx, ny, ng);
+
+  real x = (real)i - dt*vx[ij]/dx;
+  real y = (real)j - dt*vy[ij]/dy;
+  // clamp to int indices and ensure inside domain
+  int rigIdx = nx-1+ng;
+  int lefIdx = -ng;
+  int topIdx = ny-1+ng;
+  int botIdx = -ng;
+  int x2 = clamp((int)floor(x+1),lefIdx, rigIdx);
+  int x1 = clamp((int)floor(x)  ,lefIdx, rigIdx);
+  int y2 = clamp((int)floor(y+1),botIdx, topIdx);
+  int y1 = clamp((int)floor(y)  ,botIdx, topIdx);
+  x = clamp(x, (real)lefIdx, (real)rigIdx);
+  y = clamp(y, (real)botIdx, (real)topIdx);
+  // bilinearly interpolate
+  real fy1, fy2;
+  int x1y1 = index(x1, y1, nx, ny, ng);
+  int x1y2 = index(x1, y2, nx, ny, ng);
+  if(x1!=x2) {
+    real x1Weight = (x2-x)/(x2-x1);
+    real x2Weight = (x-x1)/(x2-x1);
+
+    int x2y1 = index(x2, y1, nx, ny, ng);
+    int x2y2 = index(x2, y2, nx, ny, ng);
+
+    fy1 = x1Weight*f[x1y1] + x2Weight*f[x2y1];
+    fy2 = x1Weight*f[x1y2] + x2Weight*f[x2y2];
+  } else {
+    fy1 = f[x1y1];
+    fy2 = f[x1y2];
+  }
+  real fAv;
+  if(y1!=y2) {
+    real y1Weight = (y2-y)/(y2-y1);
+    real y2Weight = (y-y1)/(y2-y1);
+    fAv = y1Weight*fy1 + y2Weight*fy2;
+  } else {
+    fAv = fy1;
+  }
+  out[ij] = fAv;
 }
 )CLC"};
 
