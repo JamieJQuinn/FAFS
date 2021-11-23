@@ -3,14 +3,14 @@
 #include <constants.hpp>
 
 Constants::Constants():
-  nx{256},
-  ny{256},
+  nx{64},
+  ny{64},
   ng{1},
-  dt{0.001},
-  totalTime{0.7},
+  dt{0.01},
+  totalTime{100},
   Re{100},
-  isAdvectionImplicit{false},
-  isDiffusionImplicit{false}
+  isAdvectionImplicit{true},
+  isDiffusionImplicit{true}
 {
   dx = 1.0/(nx+1);
   dy = 1.0/(ny+1);

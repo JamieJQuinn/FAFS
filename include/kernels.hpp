@@ -16,7 +16,7 @@ typedef cl::KernelFunctor<cl::Buffer, cl::Buffer, real, int, int, int> advanceEu
 typedef cl::KernelFunctor<cl::Buffer, cl::Buffer, real, real, real, int, int, int> calcDiffusionKernel;
 typedef cl::KernelFunctor<cl::Buffer, cl::Buffer, cl::Buffer, cl::Buffer, real, real, int, int, int> calcAdvectionKernel;
 typedef cl::KernelFunctor<cl::Buffer, int, int, int> vonNeumannKernel;
-typedef cl::KernelFunctor<cl::Buffer, cl::Buffer, real, real, cl::Buffer, int, int, int> applyJacobiKernel;
+typedef cl::KernelFunctor<cl::Buffer, cl::Buffer, real, real, real, cl::Buffer, int, int, int> applyJacobiKernel;
 typedef cl::KernelFunctor<cl::Buffer, cl::Buffer, cl::Buffer, real, real, int, int, int> calcDivergence_k;
 typedef cl::KernelFunctor<cl::Buffer, cl::Buffer, real, int, int, int> applyProjection_k;
 typedef cl::KernelFunctor<cl::Buffer, cl::Buffer, cl::Buffer, cl::Buffer, real, real, real, int, int, int> advect_k;

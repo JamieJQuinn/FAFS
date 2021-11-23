@@ -1,8 +1,8 @@
 #include <ocl_array.hpp>
 
-void runJacobiIteration(OpenCLArray& out, OpenCLArray& initialGuess, OpenCLArray& temp, const real alpha, const real beta, const OpenCLArray& b, const int iterations) {
+void runJacobiIteration(OpenCLArray& out, OpenCLArray& initialGuess, OpenCLArray& temp, const real alpha, const real beta, const real gamma, const OpenCLArray& b, const int iterations) {
   for(int i=0; i<iterations; ++i) {
-    g_kernels.applyJacobiStep(temp.interior, temp.getDeviceData(), initialGuess.getDeviceData(), alpha, beta, b.getDeviceData(), temp.nx, temp.ny, temp.ng);
+    g_kernels.applyJacobiStep(temp.interior, temp.getDeviceData(), initialGuess.getDeviceData(), alpha, beta, gamma, b.getDeviceData(), temp.nx, temp.ny, temp.ng);
     initialGuess.swapData(temp);
   }
   out.swapData(initialGuess);

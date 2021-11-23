@@ -152,6 +152,7 @@ __kernel void applyJacobiStep(
   __global const real *in,
   __private const real alpha,
   __private const real beta,
+  __private const real gamma,
   __global const real *b,
   __private const int nx,
   __private const int ny,
@@ -167,7 +168,7 @@ __kernel void applyJacobiStep(
   int ijp = index(i, j+1, nx, ny, ng);
   int ijm = index(i, j-1, nx, ny, ng);
 
-  out[ij] = (alpha*b[ij] + in[ijp] + in[ijm] + in[ipj] + in[imj])/beta;
+  out[ij] = alpha*(b[ij] - (in[ipj] + in[imj])/beta - (in[ijp] + in[ijm])/gamma);
 }
 
 __kernel void calcDivergence(
@@ -181,16 +182,28 @@ __kernel void calcDivergence(
   __private const int ng
 )
 {
+  // cell-centred global indices
   int i = gid(0, ng);
   int j = gid(1, ng);
 
-  int vij = index(i, j, nx-1, ny-1, ng);
-  int vimj = index(i-1, j, nx-1, ny-1, ng);
-  int vijm = index(i, j-1, nx-1, ny-1, ng);
+  // node-centred array indices
+  int vij   = index(i,   j,   nx+1, ny+1, ng);
+  int vijp  = index(i,   j+1, nx+1, ny+1, ng);
+  int vipj  = index(i+1, j,   nx+1, ny+1, ng);
+  int vipjp = index(i+1, j+1, nx+1, ny+1, ng);
 
+  // cell-centred array index
   int ij = index(i, j, nx, ny, ng);
 
-  out[ij] = (fx[vij] - fx[vimj])/dx + (fy[vij] - fy[vijm])/dy;
+  real dvxj  = (fx[vipj ] - fx[vij ])/dx; // ddx at lower boundary
+  real dvxjp = (fx[vipjp] - fx[vijp])/dx; // ddx at upper boundary
+  real dvxdx = 0.5*(dvxj + dvxjp); // ddx at cell centre
+
+  real dvyi  = (fy[vijp ] - fy[vij ])/dy; // ddy at left boundary
+  real dvyip = (fy[vipjp] - fy[vipj])/dy; // ddy at right boundary
+  real dvydy = 0.5*(dvyi + dvyip); // ddy at cell centre
+
+  out[ij] =  dvydy + dvxdx;
 }
 
 __kernel void applyProjectionX(
@@ -207,10 +220,17 @@ __kernel void applyProjectionX(
 
   int ij = index(i, j, nx, ny, ng);
 
-  int cij =  index(i  , j, nx+1, ny+1, ng);
-  int cipj = index(i+1, j, nx+1, ny+1, ng);
+  // Cell-centred array indices
+  int cij   = index(i,   j,   nx-1, ny-1, ng);
+  int cijm  = index(i,   j-1, nx-1, ny-1, ng);
+  int cimj  = index(i-1, j,   nx-1, ny-1, ng);
+  int cimjm = index(i-1, j-1, nx-1, ny-1, ng);
 
-  out[ij] = out[ij] - (f[cipj] - f[cij])/dx;
+  real dfdxj  = (f[cij ] - f[cimj ])/dx; // ddx at upper boundary
+  real dfdxjm = (f[cijm] - f[cimjm])/dx; // ddx at lower boundary
+  real dfdx = 0.5*(dfdxj + dfdxjm); // ddx at node
+
+  out[ij] = out[ij] - dfdx;
 }
 
 __kernel void applyProjectionY(
@@ -227,10 +247,17 @@ __kernel void applyProjectionY(
 
   int ij = index(i, j, nx, ny, ng);
 
-  int cij =  index(i, j  , nx+1, ny+1, ng);
-  int cijp = index(i, j+1, nx+1, ny+1, ng);
+  // Cell-centred array indices
+  int cij   = index(i,   j,   nx-1, ny-1, ng);
+  int cijm  = index(i,   j-1, nx-1, ny-1, ng);
+  int cimj  = index(i-1, j,   nx-1, ny-1, ng);
+  int cimjm = index(i-1, j-1, nx-1, ny-1, ng);
 
-  out[ij] = out[ij] - (f[cijp] - f[cij])/dy;
+  real dfdyi  = (f[cij ] - f[cijm ])/dy; // ddy at right boundary
+  real dfdyim = (f[cimj] - f[cimjm])/dy; // ddy at left boundary
+  real dfdy = 0.5*(dfdyi + dfdyim); // ddy at node
+
+  out[ij] = out[ij] - dfdy;
 }
 
 __kernel void advect(

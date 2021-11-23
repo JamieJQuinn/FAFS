@@ -28,7 +28,7 @@ void applyPressureBC(OpenCLArray& p) {
 void applyBoundaryConditions(Variables<OpenCLArray>& vars) {
   applyVxBC(vars.vx);
   applyVyBC(vars.vy);
-  //applyPressureBC(vars.p);
+  applyPressureBC(vars.p);
 }
 
 void setInitialConditions(Variables<OpenCLArray>& vars) {
@@ -57,14 +57,15 @@ int runOCL() {
   OpenCLArray boundTemp1(c.nx, c.ny, c.ng, "boundTemp1");
   OpenCLArray boundTemp2(c.nx, c.ny, c.ng, "boundTemp2");
   // Working arrays located at cell centres
-  OpenCLArray cellTemp1(c.nx+1, c.ny+1, c.ng, "cellTemp1");
-  OpenCLArray cellTemp2(c.nx+1, c.ny+1, c.ng, "cellTemp2");
+  OpenCLArray cellTemp1(c.nx-1, c.ny-1, c.ng, "cellTemp1");
+  OpenCLArray cellTemp2(c.nx-1, c.ny-1, c.ng, "cellTemp2");
   // Working array for divergence
-  OpenCLArray divw(c.nx+1, c.ny+1, c.ng, "divw");
+  OpenCLArray divw(c.nx-1, c.ny-1, c.ng, "divw");
 
   HDFFile icFile("000000.hdf5", false);
   vars.vx.saveTo(icFile.file);
   vars.vy.saveTo(icFile.file);
+  vars.p.saveTo(icFile.file);
   icFile.close();
 
   real t=0;
@@ -84,20 +85,23 @@ int runOCL() {
 
     applyBoundaryConditions(vars);
 
+    real dx2dy2 = c.dx*c.dx + c.dy*c.dy;
+
     // DIFFUSION
     if(c.isDiffusionImplicit) {
-      real alpha = c.Re*c.dx*c.dy/c.dt;
-      real beta = 4.0f+alpha;
+      real alpha = 1.0f/(1.0f + 2.0f*c.dt/c.Re*(1.0f/(c.dx*c.dx) + 1.0f/(c.dy*c.dy)));
+      real beta  = -c.Re*c.dx*c.dx/c.dt;
+      real gamma = -c.Re*c.dy*c.dy/c.dt;
 
       boundTemp1.fill(0.0f, true);
       applyVxBC(boundTemp1);
       applyVxBC(boundTemp2);
-      runJacobiIteration(vars.vx, boundTemp1, boundTemp2, alpha, beta, vars.vx);
+      runJacobiIteration(vars.vx, boundTemp1, boundTemp2, alpha, beta, gamma, vars.vx);
 
       boundTemp1.fill(0.0f, true);
       applyVyBC(boundTemp1);
       applyVyBC(boundTemp2);
-      runJacobiIteration(vars.vy, boundTemp1, boundTemp2, alpha, beta, vars.vy);
+      runJacobiIteration(vars.vy, boundTemp1, boundTemp2, alpha, beta, gamma, vars.vy);
     } else {
       calcDiffusionTerm(boundTemp1, vars.vx, c.dx, c.dy, c.Re);
       advanceEuler(vars.vx, boundTemp1, c.dt);
@@ -113,8 +117,13 @@ int runOCL() {
     calcDivergence(divw, vars.vx, vars.vy, c.dx, c.dy);
     // Solve Poisson eq for pressure $\nabla^2 p = - \nabla \cdot v$
     cellTemp1.fill(0.0f, true);
-    runJacobiIteration(vars.p, cellTemp1, cellTemp2, -c.dx*c.dy, 4.0f, divw);
-    applyVonNeumannBC(vars.p);
+    cellTemp2.fill(0.0f, true);
+    for(int i=0; i<20; ++i) {
+      g_kernels.applyJacobiStep(cellTemp2.interior, cellTemp2.getDeviceData(), cellTemp1.getDeviceData(), -0.5f*(c.dx*c.dx*c.dy*c.dy)/dx2dy2, c.dx*c.dx, c.dy*c.dy, divw.getDeviceData(), cellTemp2.nx, cellTemp2.ny, cellTemp2.ng);
+      cellTemp1.swapData(cellTemp2);
+      applyVonNeumannBC(cellTemp1);
+    }
+    vars.p.swapData(cellTemp1);
     // Project onto incompressible velocity space
     applyProjectionX(vars.vx, vars.p, c.dx);
     applyProjectionY(vars.vy, vars.p, c.dy);
