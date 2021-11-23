@@ -40,6 +40,8 @@ void setInitialConditions(Variables<OpenCLArray>& vars) {
 int runOCL() {
   const Constants c;
 
+  c.print();
+
   int error = setDefaultPlatform("CUDA");
   if (error < 0) return -1;
 
@@ -68,41 +70,41 @@ int runOCL() {
   real t=0;
   while (t < c.totalTime) {
     // ADVECTION
-    // implicit
-    //advectImplicit(boundTemp1, vars.vx, vars.vx, vars.vy, c.dx, c.dy, c.dt, c.nx, c.ny, c.ng);
-    //advectImplicit(boundTemp2, vars.vy, vars.vx, vars.vy, c.dx, c.dy, c.dt, c.nx, c.ny, c.ng);
-    //vars.vx.swapData(boundTemp1);
-    //vars.vy.swapData(boundTemp2);
-    // explicit
-    calcAdvectionTerm(boundTemp1, vars.vx, vars.vx, vars.vy, c.dx, c.dy);
-    calcAdvectionTerm(boundTemp2, vars.vy, vars.vx, vars.vy, c.dx, c.dy);
-    advanceEuler(vars.vx, boundTemp1, c.dt);
-    advanceEuler(vars.vy, boundTemp2, c.dt);
+    if(c.isAdvectionImplicit) {
+      advectImplicit(boundTemp1, vars.vx, vars.vx, vars.vy, c.dx, c.dy, c.dt);
+      advectImplicit(boundTemp2, vars.vy, vars.vx, vars.vy, c.dx, c.dy, c.dt);
+      vars.vx.swapData(boundTemp1);
+      vars.vy.swapData(boundTemp2);
+    } else {
+      calcAdvectionTerm(boundTemp1, vars.vx, vars.vx, vars.vy, c.dx, c.dy);
+      calcAdvectionTerm(boundTemp2, vars.vy, vars.vx, vars.vy, c.dx, c.dy);
+      advanceEuler(vars.vx, boundTemp1, c.dt);
+      advanceEuler(vars.vy, boundTemp2, c.dt);
+    }
 
     applyBoundaryConditions(vars);
 
     // DIFFUSION
-    real alpha = c.Re*c.dx*c.dy/c.dt;
-    real beta = 4.0f+alpha;
+    if(c.isDiffusionImplicit) {
+      real alpha = c.Re*c.dx*c.dy/c.dt;
+      real beta = 4.0f+alpha;
 
-    // Diffuse vx
-    // Implicit
-    boundTemp1.fill(0.0f, true);
-    applyVxBC(boundTemp1);
-    applyVxBC(boundTemp2);
-    runJacobiIteration(vars.vx, boundTemp1, boundTemp2, alpha, beta, vars.vx);
-    // Explicit
-    //calcDiffusionTerm(boundTemp1, vars.vx, c.dx, c.dy, c.Re);
-    //advanceEuler(vars.vx, boundTemp1, c.dt);
+      boundTemp1.fill(0.0f, true);
+      applyVxBC(boundTemp1);
+      applyVxBC(boundTemp2);
+      runJacobiIteration(vars.vx, boundTemp1, boundTemp2, alpha, beta, vars.vx);
 
-    // Implicit
-    boundTemp1.fill(0.0f, true);
-    applyVyBC(boundTemp1);
-    applyVyBC(boundTemp2);
-    runJacobiIteration(vars.vy, boundTemp1, boundTemp2, alpha, beta, vars.vy);
-    // Explicit
-    //calcDiffusionTerm(boundTemp1, vars.vy, c.dx, c.dy, c.Re);
-    //advanceEuler(vars.vy, boundTemp1, c.dt);
+      boundTemp1.fill(0.0f, true);
+      applyVyBC(boundTemp1);
+      applyVyBC(boundTemp2);
+      runJacobiIteration(vars.vy, boundTemp1, boundTemp2, alpha, beta, vars.vy);
+    } else {
+      calcDiffusionTerm(boundTemp1, vars.vx, c.dx, c.dy, c.Re);
+      advanceEuler(vars.vx, boundTemp1, c.dt);
+
+      calcDiffusionTerm(boundTemp1, vars.vy, c.dx, c.dy, c.Re);
+      advanceEuler(vars.vy, boundTemp1, c.dt);
+    }
 
     applyBoundaryConditions(vars);
 

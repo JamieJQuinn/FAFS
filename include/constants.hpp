@@ -16,4 +16,9 @@ class Constants {
     real totalTime;
 
     real Re; // Reynolds number (in this non-dimensionalisation, equiv to 1/viscosity)
+
+    bool isAdvectionImplicit;
+    bool isDiffusionImplicit;
+
+    void print() const;
 };
