@@ -135,6 +135,6 @@ int runOCL() {
 }
 
 int main() {
-  //return runOCL();
-  return runCPU();
+  return runOCL();
+  //return runCPU();
 }
