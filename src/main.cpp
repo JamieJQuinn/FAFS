@@ -57,10 +57,10 @@ int runOCL() {
   OpenCLArray boundTemp1(c.nx, c.ny, c.ng, "boundTemp1");
   OpenCLArray boundTemp2(c.nx, c.ny, c.ng, "boundTemp2");
   // Working arrays located at cell centres
-  OpenCLArray cellTemp1(c.nx-1, c.ny-1, c.ng, "cellTemp1");
-  OpenCLArray cellTemp2(c.nx-1, c.ny-1, c.ng, "cellTemp2");
+  OpenCLArray cellTemp1(c.nx+1, c.ny+1, c.ng, "cellTemp1");
+  OpenCLArray cellTemp2(c.nx+1, c.ny+1, c.ng, "cellTemp2");
   // Working array for divergence
-  OpenCLArray divw(c.nx-1, c.ny-1, c.ng, "divw");
+  OpenCLArray divw(c.nx+1, c.ny+1, c.ng, "divw");
 
   HDFFile icFile("000000.hdf5", false);
   vars.vx.saveTo(icFile.file);

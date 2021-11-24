@@ -13,6 +13,6 @@ class Variables {
   Variables<T>(const Constants& c):
     vx(c.nx, c.ny, c.ng, "vx"),
     vy(c.nx, c.ny, c.ng, "vy"),
-    p(c.nx-1, c.ny-1, c.ng, "pressure")
+    p(c.nx+1, c.ny+1, c.ng, "pressure")
   {}
 };

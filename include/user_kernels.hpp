@@ -7,6 +7,8 @@ void calcAdvectionTerm(OpenCLArray& out, const OpenCLArray& f, const OpenCLArray
 void advanceEuler(OpenCLArray& out, const OpenCLArray& ddt, const real dt);
 
 void applyVonNeumannBC(OpenCLArray& out);
+void applyVonNeumannBC_x(OpenCLArray& out);
+void applyVonNeumannBC_y(OpenCLArray& out);
 void applyNoSlipBC(OpenCLArray& var);
 
 void calcDivergence(OpenCLArray& out, OpenCLArray& fx, OpenCLArray& fy, const real dx, const real dy);

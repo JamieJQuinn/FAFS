@@ -20,9 +20,17 @@ void advanceEuler(OpenCLArray& out, const OpenCLArray& ddt, const real dt) {
   g_kernels.advanceEuler(out.interior, out.getDeviceData(), ddt.getDeviceData(), dt, out.nx, out.ny, out.ng);
 }
 
-void applyVonNeumannBC(OpenCLArray& out) {
+void applyVonNeumannBC_y(OpenCLArray& out) {
   g_kernels.applyVonNeumannBC_y(out.lowerBound, out.getDeviceData(), out.nx, out.ny, out.ng);
+}
+
+void applyVonNeumannBC_x(OpenCLArray& out) {
   g_kernels.applyVonNeumannBC_x(out.leftBound, out.getDeviceData(), out.nx, out.ny, out.ng);
+}
+
+void applyVonNeumannBC(OpenCLArray& out) {
+  applyVonNeumannBC_y(out);
+  applyVonNeumannBC_x(out);
 }
 
 void applyNoSlipBC(OpenCLArray& var) {
