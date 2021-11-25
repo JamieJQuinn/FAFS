@@ -144,7 +144,7 @@ __kernel void calcDiffusionTerm(
   int imj = index(i-1, j, nx, ny, ng);
   int ijp = index(i, j+1, nx, ny, ng);
   int ijm = index(i, j-1, nx, ny, ng);
-  out[ij] = (f[ijp] + f[ijm] + f[ipj] + f[imj] - 4*f[ij])/(Re*dx*dy);
+  out[ij] = 1.0/Re*((f[ijp] - 2.0*f[ij] + f[ijm])/(dy*dy) + (f[ipj] - 2.0*f[ij] + f[imj])/(dx*dx));
 }
 
 __kernel void applyJacobiStep(
