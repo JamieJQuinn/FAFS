@@ -33,7 +33,7 @@ def main():
             x = np.linspace(0, 1, v1.shape[0])
             y = np.linspace(0, 1, v1.shape[1])
             X, Y = np.meshgrid(x, y)
-            plt.streamplot(X, Y, v1, v2, color='k', density=2, linewidth=0.5, arrowstyle='->')
+            plt.streamplot(X, Y, v1, v2, color='k', density=1, linewidth=0.5, arrowstyle='->')
         if args.quiver:
             v1 = hf[args.quiver[0]][1:-1, 1:-1].T
             v2 = hf[args.quiver[1]][1:-1, 1:-1].T
