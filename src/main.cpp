@@ -118,10 +118,10 @@ int runOCL() {
     // Solve Poisson eq for pressure $\nabla^2 p = - \nabla \cdot v$
     cellTemp1.fill(0.0f, true);
     cellTemp2.fill(0.0f, true);
-    for(int i=0; i<20; ++i) {
+    for(int i=0; i<150; ++i) {
       g_kernels.applyJacobiStep(cellTemp2.interior, cellTemp2.getDeviceData(), cellTemp1.getDeviceData(), -0.5f*(c.dx*c.dx*c.dy*c.dy)/dx2dy2, c.dx*c.dx, c.dy*c.dy, divw.getDeviceData(), cellTemp2.nx, cellTemp2.ny, cellTemp2.ng);
       cellTemp1.swapData(cellTemp2);
-      applyVonNeumannBC(cellTemp1);
+      applyPressureBC(cellTemp1);
     }
     vars.p.swapData(cellTemp1);
     // Project onto incompressible velocity space
@@ -133,11 +133,46 @@ int runOCL() {
     t += c.dt;
   }
 
+  // DEBUG
+  vars.p.toHost();
+
+  Array cellTemp3(c.nx+1, c.ny+1, c.ng, "cellTemp3");
+  for(int i=0; i<cellTemp3.nx; ++i) {
+    for(int j=0; j<cellTemp3.ny; ++j) {
+      cellTemp3(i,j) = (vars.p(i+1,j) + vars.p(i-1,j) + vars.p(i, j+1) + vars.p(i,j-1) - 4.0*vars.p(i,j))/(c.dx*c.dx);
+      //cellTemp3(i,j) = vars.p(i,j);
+    }
+  }
+
+  Array dpdx(c.nx, c.ny, c.ng, "dpdx");
+  Array dpdy(c.nx, c.ny, c.ng, "dpdy");
+  for(int i=0; i<dpdx.nx; ++i) {
+    for(int j=0; j<dpdx.ny; ++j) {
+      real dfdxjp = (vars.p(i+1,j+1) - vars.p(i,j+1))/c.dx;
+      real dfdxj = (vars.p(i+1,j) - vars.p(i,j))/c.dx;
+      real dfdx = (dfdxjp + dfdxj)/2.0;
+      dpdx(i,j) = -dfdx;
+
+      real dfdyip = (vars.p(i+1,j+1) - vars.p(i+1,j))/c.dy;
+      real dfdyi = (vars.p(i,j+1) - vars.p(i,j))/c.dy;
+      real dfdy = (dfdyip + dfdyi)/2.0;
+      dpdy(i,j) = -dfdy;
+    }
+  }
+
+  calcDivergence(divw, vars.vx, vars.vy, c.dx, c.dy);
+  // END DEBUG
+
   HDFFile laterFile("000001.hdf5", false);
   vars.vx.saveTo(laterFile.file);
   vars.vy.saveTo(laterFile.file);
   vars.p.saveTo(laterFile.file);
   divw.saveTo(laterFile.file);
+  // DEBUG
+  cellTemp3.saveTo(laterFile.file);
+  dpdx.saveTo(laterFile.file);
+  dpdy.saveTo(laterFile.file);
+  // END DEBUG
   icFile.close();
 
   return 0;
