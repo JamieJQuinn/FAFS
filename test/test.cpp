@@ -1,5 +1,8 @@
 #include <iostream>
+
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
+
 #include <ocl_utility.hpp>
 #include <ocl_array.hpp>
 #include <kernels.hpp>
@@ -203,9 +206,10 @@ TEST_CASE( "Test Jacobi iteration", "[ocl]") {
   temp1.fill(1.0f, true);
   temp2.fill(1.0f, true);
 
-  const real alpha = Re*dx*dy/dt;
-  const real beta = 4.0f+alpha;
-  runJacobiIteration(resImplicit, temp1, temp2, alpha, beta, resImplicit);
+  real alpha = 1.0f/(1.0f + 2.0f*dt/Re*(1.0f/(dx*dx) + 1.0f/(dy*dy)));
+  real beta  = -Re*dx*dx/dt;
+  real gamma = -Re*dy*dy/dt;
+  runJacobiIteration(resImplicit, temp1, temp2, alpha, beta, gamma, resImplicit);
 
   resImplicit.toHost();
 
@@ -221,7 +225,8 @@ TEST_CASE( "Test Jacobi iteration", "[ocl]") {
 
   for(int i=0; i<nx; ++i) {
     for(int j=0; j<nx; ++j) {
-      REQUIRE(resImplicit(i,j) == resExplicit(i,j));
+      std::cout << i << ", " << j << std::endl;
+      REQUIRE(resImplicit(i,j) == Catch::Approx(resExplicit(i,j)));
     }
   }
 }
