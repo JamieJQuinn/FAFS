@@ -25,6 +25,9 @@ def main():
                 data = hf[args.imshow][:,:].T
             else:
                 data = hf[args.imshow][1:-1, 1:-1].T
+            # vmax = np.max(np.abs(data))
+            # vmin = -vmax
+            # im = plt.imshow(data, origin='lower', extent=(0, 1, 0, 1), cmap='RdBu', vmax=vmax, vmin=vmin)
             im = plt.imshow(data, origin='lower', extent=(0, 1, 0, 1))
             plt.colorbar(im)
         if args.streamplot:

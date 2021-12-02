@@ -15,6 +15,8 @@
 void applyVxBC(OpenCLArray& vx) {
   applyNoSlipBC(vx);
   vx.setUpperBoundary(1.0f);
+  vx.setLeftBoundary(0.0f);
+  vx.setRightBoundary(0.0f);
 }
 
 void applyVyBC(OpenCLArray& vy) {
@@ -116,14 +118,18 @@ int runOCL() {
     divw.fill(0.0f, true);
     calcDivergence(divw, vars.vx, vars.vy, c.dx, c.dy);
     // Solve Poisson eq for pressure $\nabla^2 p = - \nabla \cdot v$
+    real alpha = -0.5f*(c.dx*c.dx*c.dy*c.dy)/dx2dy2;
+    real beta = c.dx*c.dx;
+    real gamma = c.dy*c.dy;
     cellTemp1.fill(0.0f, true);
     cellTemp2.fill(0.0f, true);
-    for(int i=0; i<150; ++i) {
-      g_kernels.applyJacobiStep(cellTemp2.interior, cellTemp2.getDeviceData(), cellTemp1.getDeviceData(), -0.5f*(c.dx*c.dx*c.dy*c.dy)/dx2dy2, c.dx*c.dx, c.dy*c.dy, divw.getDeviceData(), cellTemp2.nx, cellTemp2.ny, cellTemp2.ng);
-      cellTemp1.swapData(cellTemp2);
+    for(int i=0; i<200; ++i) {
       applyPressureBC(cellTemp1);
+      g_kernels.applyJacobiStep(cellTemp2.interior, cellTemp2.getDeviceData(), cellTemp1.getDeviceData(), alpha, beta, gamma, divw.getDeviceData(), cellTemp2.nx, cellTemp2.ny, cellTemp2.ng);
+      cellTemp1.swapData(cellTemp2);
     }
     vars.p.swapData(cellTemp1);
+    applyPressureBC(vars.p);
     // Project onto incompressible velocity space
     applyProjectionX(vars.vx, vars.p, c.dx);
     applyProjectionY(vars.vy, vars.p, c.dy);
@@ -140,7 +146,12 @@ int runOCL() {
   for(int i=0; i<cellTemp3.nx; ++i) {
     for(int j=0; j<cellTemp3.ny; ++j) {
       cellTemp3(i,j) = (vars.p(i+1,j) + vars.p(i-1,j) + vars.p(i, j+1) + vars.p(i,j-1) - 4.0*vars.p(i,j))/(c.dx*c.dx);
-      //cellTemp3(i,j) = vars.p(i,j);
+    }
+  }
+  divw.toHost();
+  for(int i=0; i<cellTemp3.nx; ++i) {
+    for(int j=0; j<cellTemp3.ny; ++j) {
+      cellTemp3(i,j) -= divw(i,j);
     }
   }
 

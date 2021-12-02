@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cmath>
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
@@ -188,45 +189,57 @@ TEST_CASE( "Test calculating advection term", "[ocl]") {
   }
 }
 
-TEST_CASE( "Test Jacobi iteration", "[ocl]") {
-  const int nx = 16;
-  const int ny = 16;
+TEST_CASE( "Test Jacobi iteration on Poisson eqn", "[ocl]") {
+  const int nx = 32;
+  const int ny = nx;
   const int ng = 1;
 
-  const real dx = 1.0f/(nx-1);
-  const real dy = 1.0f/(ny-1);
+  const real dx = 1.0f/(nx+2*ng-1);
+  const real dy = 1.0f/(ny+2*ng-1);
   const real dt = 0.01f;
   const real Re = 10.0f;
 
-  OpenCLArray resImplicit(nx, ny, ng);
+  OpenCLArray result(nx, ny, ng);
+  OpenCLArray b(nx, ny, ng);
+
+  for(int i=-ng; i<b.nx+ng; ++i) {
+    for(int j=-ng; j<b.ny+ng; ++j) {
+      real x = 0 + (i+ng)*dx;
+      real y = 0 + (j+ng)*dy;
+      b(i,j) = cos(M_PI*x)*sin(M_PI*y);
+    }
+  }
+
+  b.toDevice();
+
   OpenCLArray temp1(nx, ny, ng);
   OpenCLArray temp2(nx, ny, ng);
 
-  resImplicit.fill(1.0f, true);
-  temp1.fill(1.0f, true);
-  temp2.fill(1.0f, true);
-
-  real alpha = 1.0f/(1.0f + 2.0f*dt/Re*(1.0f/(dx*dx) + 1.0f/(dy*dy)));
-  real beta  = -Re*dx*dx/dt;
-  real gamma = -Re*dy*dy/dt;
-  runJacobiIteration(resImplicit, temp1, temp2, alpha, beta, gamma, resImplicit);
-
-  resImplicit.toHost();
-
-  OpenCLArray resExplicit(nx, ny, ng);
-
-  resExplicit.fill(1.0f, true);
   temp1.fill(0.0f, true);
+  temp2.fill(0.0f, true);
 
-  calcDiffusionTerm(temp1, resExplicit, dx, dy, Re);
-  advanceEuler(resExplicit, temp1, dt);
+  real alpha = -0.5f*(dx*dx*dy*dy)/(dx*dx + dy*dy);
+  real beta = dx*dx;
+  real gamma = dy*dy;
 
-  resExplicit.toHost();
+  for(int i=0; i<100; ++i) {
+    applyVonNeumannBC(temp1);
+    g_kernels.applyJacobiStep(temp2.interior, temp2.getDeviceData(), temp1.getDeviceData(), alpha, beta, gamma, b.getDeviceData(), temp2.nx, temp2.ny, temp2.ng);
+    temp1.swapData(temp2);
+  }
+
+  temp1.toHost();
 
   for(int i=0; i<nx; ++i) {
-    for(int j=0; j<nx; ++j) {
+    for(int j=0; j<ny; ++j) {
+      temp2(i,j) = (temp1(i+1,j) + temp1(i-1,j) + temp1(i, j+1) + temp1(i,j-1) - 4.0*temp1(i,j))/(dx*dx);
+    }
+  }
+
+  for(int i=0; i<nx; ++i) {
+    for(int j=0; j<ny; ++j) {
       std::cout << i << ", " << j << std::endl;
-      REQUIRE(resImplicit(i,j) == Catch::Approx(resExplicit(i,j)));
+      REQUIRE(temp2(i,j) == Catch::Approx(b(i,j)).margin(0.001));
     }
   }
 }

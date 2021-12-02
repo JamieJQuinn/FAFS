@@ -3,11 +3,11 @@
 #include <constants.hpp>
 
 Constants::Constants():
-  nx{64},
-  ny{64},
+  nx{128},
+  ny{nx},
   ng{1},
   dt{0.01},
-  totalTime{100},
+  totalTime{1},
   Re{100},
   isAdvectionImplicit{true},
   isDiffusionImplicit{true}
